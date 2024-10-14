@@ -32,10 +32,10 @@ class Preset(IntEnum):
 
 
 def save_frame(
-    frame_id,
-    out_directory,
-    color_buffer,
-    depth_buffer,
+    frame_id,#当前帧的ID，int
+    out_directory,#保存数据的文件夹路径，str
+    color_buffer,#彩色图像的缓存
+    depth_buffer,#深度图像的缓存
     pose_buffer,
     pose2_buffer,
     pose3_buffer,
@@ -45,12 +45,13 @@ def save_frame(
     leftHandJointOri_buffer,
     save_hand,
 ):
+    #创建目录
     frame_directory = os.path.join(out_directory, f"frame_{frame_id}")
     os.makedirs(frame_directory, exist_ok=True)
 
     cv2.imwrite(
         os.path.join(frame_directory, "color_image.jpg"),
-        color_buffer[frame_id][:, :, ::-1],
+        color_buffer[frame_id][:, :, ::-1],#BGR2RGB
     )
     cv2.imwrite(
         os.path.join(frame_directory, "depth_image.png"), depth_buffer[frame_id]
@@ -118,7 +119,7 @@ class RealsesneProcessor:
         self.rightHandJointOri_buffer = []
         self.leftHandJointOri_buffer = []
 
-    def get_rs_t265_config(self, t265_serial, t265_pipeline):
+    def get_rs_t265_config(self, t265_serial, t265_pipeline):#启用 T265 摄像头的位姿数据流
         t265_config = rs.config()
         t265_config.enable_device(t265_serial)
         t265_config.enable_stream(rs.stream.pose)
@@ -130,7 +131,7 @@ class RealsesneProcessor:
         if self.save_hand:
             self.rds = redis.Redis(host="localhost", port=6669, db=0)
 
-        # Create a pipeline
+        #创建深度和彩色图像数据流的管道
         self.pipeline = rs.pipeline()
         config = rs.config()
         color_profiles, depth_profiles = get_profiles()
@@ -159,17 +160,22 @@ class RealsesneProcessor:
             self.thrid_t265_serial, self.t265_pipeline_3
         )
 
+        #启用管道
         self.t265_pipeline.start(t265_config)
         self.t265_pipeline_2.start(t265_config_2)
         self.t265_pipeline_3.start(t265_config_3)
-
         pipeline_profile = self.pipeline.start(config)
+
+        #深度传感器设置
         depth_sensor = pipeline_profile.get_device().first_depth_sensor()
         depth_sensor.set_option(rs.option.visual_preset, Preset.HighAccuracy)
         self.depth_scale = depth_sensor.get_depth_scale()
+
+        #深度、彩色对齐
         align_to = rs.stream.color
         self.align = rs.align(align_to)
 
+        #可视化设置
         self.vis = None
         if self.enable_visualization:
             self.vis = o3d.visualization.Visualizer()
@@ -179,13 +185,14 @@ class RealsesneProcessor:
     def get_rgbd_frame_from_realsense(self, enable_visualization=False):
         frames = self.pipeline.wait_for_frames()
 
-        # Align the depth frame to color frame
+        # 对齐
         aligned_frames = self.align.process(frames)
 
-        # Get aligned frames
+        # 提取对齐后的帧数据
         aligned_depth_frame = aligned_frames.get_depth_frame()
         color_frame = aligned_frames.get_color_frame()
 
+        #转换为numpy数组
         depth_image = (
             np.asanyarray(aligned_depth_frame.get_data()) // 4
         )  # L515 camera need to divide by 4 to get metric in meter
@@ -374,6 +381,7 @@ class RealsesneProcessor:
                         self.leftHandJoint_buffer.append(
                             copy.deepcopy(leftHandJointXyz)
                         )
+                        
                         self.rightHandJointOri_buffer.append(
                             copy.deepcopy(rightHandJointOrientation)
                         )
@@ -424,14 +432,14 @@ import concurrent.futures
 
 def main(args):
     realsense_processor = RealsesneProcessor(
-        first_t265_serial="11622110012",
-        second_t265_serial="909212110944",
-        thrid_t265_serial="929122111181",
+        first_t265_serial="230322111290",
+        second_t265_serial="230322110443",
+        thrid_t265_serial="230322110412",
         total_frame=10000,
         store_frame=args.store_frame,
         out_directory=args.out_directory,
         save_hand=args.store_hand,
-        enable_visualization=args.enable_vis,
+        enable_visualization    =args.enable_vis,
     )
     realsense_processor.configure_stream()
     realsense_processor.process_frame()

@@ -28,9 +28,9 @@ right_hand_joint_names = ["RightHand",
 
 def normalize_wrt_middle_proximal(hand_positions, is_left=True):#根据手中指最近的关节位置，将手部关节位置归一化
     #根据输入判断要处理左手还是右手
-    middle_proximal_idx = left_hand_joint_names.index('leftMiddleProximal')
+    middle_proximal_idx = left_hand_joint_names.index('LeftFinger3Proximal')
     if not is_left:
-        middle_proximal_idx = right_hand_joint_names.index('rightMiddleProximal')
+        middle_proximal_idx = right_hand_joint_names.index('RightFinger3Proximal')
 
     #获得手腕位置
     wrist_position = hand_positions[0]
@@ -42,7 +42,7 @@ def normalize_wrt_middle_proximal(hand_positions, is_left=True):#根据手中指
 
 def start_server(port):
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # Using SOCK_DGRAM for UDP
-    s.bind(("192.168.199.221", port))
+    s.bind(("192.168.1.101", port))
     print(f"Server started, listening on port {port} for UDP packets...")
 
     while True:

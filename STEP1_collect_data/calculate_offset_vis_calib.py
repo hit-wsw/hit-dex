@@ -33,7 +33,7 @@ if __name__ == "__main__":
     default_ori_matrix_left = euler2mat(*default_ori_left)
 
     # extract offset and ori offset from directory
-    frame_dirs = os.listdir("./test_data")
+    frame_dirs = os.listdir("./tmp_calib")
     list = []
     list_ori = []
     list_left = []
@@ -43,20 +43,20 @@ if __name__ == "__main__":
         print(frame_dir)
         if "_left" in frame_dir:
             if "_ori" in frame_dir:
-                delta_ori_euler = np.loadtxt(os.path.join("./test_data", frame_dir))
+                delta_ori_euler = np.loadtxt(os.path.join("./tmp_calib", frame_dir))
                 delta_ori_matrix = euler2mat(*delta_ori_euler)
                 combined_matrix = np.dot(delta_ori_matrix, default_ori_matrix_left) 
                 list_ori_left.append(R.from_matrix(combined_matrix).as_euler('xyz', degrees=False))
             else:
-                list_left.append(np.loadtxt(os.path.join("./test_data", frame_dir)))
+                list_left.append(np.loadtxt(os.path.join("./tmp_calib", frame_dir)))
         else:
             if "_ori" in frame_dir:
-                delta_ori_euler = np.loadtxt(os.path.join("./test_data", frame_dir))
+                delta_ori_euler = np.loadtxt(os.path.join("./tmp_calib", frame_dir))
                 delta_ori_matrix = euler2mat(*delta_ori_euler)
                 combined_matrix = np.dot(delta_ori_matrix, default_ori_matrix) 
                 list_ori.append(R.from_matrix(combined_matrix).as_euler('xyz', degrees=False))
             else:
-                list.append(np.loadtxt(os.path.join("./test_data", frame_dir)))
+                list.append(np.loadtxt(os.path.join("./tmp_calib", frame_dir)))
 
     # calculate offset
     print("delta offset", np.mean(list, axis=0))
