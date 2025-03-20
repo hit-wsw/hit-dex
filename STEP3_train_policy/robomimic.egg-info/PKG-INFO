@@ -1,0 +1,20 @@
+Metadata-Version: 2.1
+Name: robomimic
+Version: 0.3.0
+Summary: robomimic: A Modular Framework for Robot Learning from Demonstration
+Home-page: https://github.com/ARISE-Initiative/robomimic
+Author: Ajay Mandlekar, Danfei Xu, Josiah Wong, Soroush Nasiriany, Chen Wang
+Author-email: amandlek@cs.stanford.edu
+Requires-Python: >=3
+Description-Content-Type: text/markdown
+Requires-Dist: numpy>=1.13.3
+Requires-Dist: h5py
+Requires-Dist: psutil
+Requires-Dist: tqdm
+Requires-Dist: termcolor
+Requires-Dist: tensorboard
+Requires-Dist: tensorboardX
+Requires-Dist: imageio
+Requires-Dist: imageio-ffmpeg
+Requires-Dist: matplotlib
+Requires-Dist: egl_probe>=1.0.1

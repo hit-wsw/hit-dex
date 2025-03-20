@@ -1,0 +1,429 @@
+
+============= 1Initialized Observation Utils with Obs Spec =============
+
+using obs modality: low_dim with keys: ['robot0_eef_pos', 'pointcloud', 'robot0_eef_hand', 'robot0_eef_quat']
+using obs modality: rgb with keys: []
+using obs modality: depth with keys: []
+using obs modality: scan with keys: []
+obs key pointcloud with shape (10000, 6)
+obs key robot0_eef_hand with shape (32,)
+obs key robot0_eef_pos with shape (6,)
+obs key robot0_eef_quat with shape (8,)
+
+ModuleDict(
+  (obs): ObservationEncoder(
+      Key(
+          name=pointcloud
+          shape=[10000, 6]
+          modality=low_dim
+          randomizer=None
+          net=PointNet(
+              input_dim=6
+              output_dim=64
+              layers=['Conv1d(6, 32, 1)', 'ReLU', 'Conv1d(32, 64, 1)', 'ReLU', 'Conv1d(64, 128, 1)', 'ReLU', 'Conv1d(128, 256, 1)', 'ReLU', 'AdaptiveMaxPool1d']
+              fc_layers=['Linear(256, 64)', 'Identity']
+              global_feature=True
+          )
+          sharing_from=None
+      )
+      Key(
+          name=robot0_eef_hand
+          shape=[32]
+          modality=low_dim
+          randomizer=None
+          net=None
+          sharing_from=None
+      )
+      Key(
+          name=robot0_eef_pos
+          shape=[6]
+          modality=low_dim
+          randomizer=None
+          net=None
+          sharing_from=None
+      )
+      Key(
+          name=robot0_eef_quat
+          shape=[8]
+          modality=low_dim
+          randomizer=None
+          net=None
+          sharing_from=None
+      )
+      output_shape=[110]
+  )
+)
+number of parameters: 7.001963e+07
+
+============= Model Summary =============
+DiffusionPolicyUNetDex (
+  ModuleDict(
+    (policy): ModuleDict(
+      (obs_encoder): ObservationGroupEncoder(
+          group=obs
+          ObservationEncoder(
+              Key(
+                  name=pointcloud
+                  shape=[10000, 6]
+                  modality=low_dim
+                  randomizer=None
+                  net=PointNet(
+                      input_dim=6
+                      output_dim=64
+                      layers=['Conv1d(6, 32, 1)', 'ReLU', 'Conv1d(32, 64, 1)', 'ReLU', 'Conv1d(64, 128, 1)', 'ReLU', 'Conv1d(128, 256, 1)', 'ReLU', 'AdaptiveMaxPool1d']
+                      fc_layers=['Linear(256, 64)', 'Identity']
+                      global_feature=True
+                  )
+                  sharing_from=None
+              )
+              Key(
+                  name=robot0_eef_hand
+                  shape=[32]
+                  modality=low_dim
+                  randomizer=None
+                  net=None
+                  sharing_from=None
+              )
+              Key(
+                  name=robot0_eef_pos
+                  shape=[6]
+                  modality=low_dim
+                  randomizer=None
+                  net=None
+                  sharing_from=None
+              )
+              Key(
+                  name=robot0_eef_quat
+                  shape=[8]
+                  modality=low_dim
+                  randomizer=None
+                  net=None
+                  sharing_from=None
+              )
+              output_shape=[110]
+          )
+      )
+      (noise_pred_net): ConditionalUnet1D(
+        (mid_modules): ModuleList(
+          (0-1): 2 x ConditionalResidualBlock1D(
+            (blocks): ModuleList(
+              (0-1): 2 x Conv1dBlock(
+                (block): Sequential(
+                  (0): Conv1d(1024, 1024, kernel_size=(5,), stride=(1,), padding=(2,))
+                  (1): GroupNorm(8, 1024, eps=1e-05, affine=True)
+                  (2): Mish()
+                )
+              )
+            )
+            (cond_encoder): Sequential(
+              (0): Mish()
+              (1): Linear(in_features=586, out_features=2048, bias=True)
+              (2): Unflatten(dim=-1, unflattened_size=(-1, 1))
+            )
+            (residual_conv): Identity()
+          )
+        )
+        (diffusion_step_encoder): Sequential(
+          (0): SinusoidalPosEmb()
+          (1): Linear(in_features=256, out_features=1024, bias=True)
+          (2): Mish()
+          (3): Linear(in_features=1024, out_features=256, bias=True)
+        )
+        (up_modules): ModuleList(
+          (0): ModuleList(
+            (0): ConditionalResidualBlock1D(
+              (blocks): ModuleList(
+                (0): Conv1dBlock(
+                  (block): Sequential(
+                    (0): Conv1d(2048, 512, kernel_size=(5,), stride=(1,), padding=(2,))
+                    (1): GroupNorm(8, 512, eps=1e-05, affine=True)
+                    (2): Mish()
+                  )
+                )
+                (1): Conv1dBlock(
+                  (block): Sequential(
+                    (0): Conv1d(512, 512, kernel_size=(5,), stride=(1,), padding=(2,))
+                    (1): GroupNorm(8, 512, eps=1e-05, affine=True)
+                    (2): Mish()
+                  )
+                )
+              )
+              (cond_encoder): Sequential(
+                (0): Mish()
+                (1): Linear(in_features=586, out_features=1024, bias=True)
+                (2): Unflatten(dim=-1, unflattened_size=(-1, 1))
+              )
+              (residual_conv): Conv1d(2048, 512, kernel_size=(1,), stride=(1,))
+            )
+            (1): ConditionalResidualBlock1D(
+              (blocks): ModuleList(
+                (0-1): 2 x Conv1dBlock(
+                  (block): Sequential(
+                    (0): Conv1d(512, 512, kernel_size=(5,), stride=(1,), padding=(2,))
+                    (1): GroupNorm(8, 512, eps=1e-05, affine=True)
+                    (2): Mish()
+                  )
+                )
+              )
+              (cond_encoder): Sequential(
+                (0): Mish()
+                (1): Linear(in_features=586, out_features=1024, bias=True)
+                (2): Unflatten(dim=-1, unflattened_size=(-1, 1))
+              )
+              (residual_conv): Identity()
+            )
+            (2): Upsample1d(
+              (conv): ConvTranspose1d(512, 512, kernel_size=(4,), stride=(2,), padding=(1,))
+            )
+          )
+          (1): ModuleList(
+            (0): ConditionalResidualBlock1D(
+              (blocks): ModuleList(
+                (0): Conv1dBlock(
+                  (block): Sequential(
+                    (0): Conv1d(1024, 256, kernel_size=(5,), stride=(1,), padding=(2,))
+                    (1): GroupNorm(8, 256, eps=1e-05, affine=True)
+                    (2): Mish()
+                  )
+                )
+                (1): Conv1dBlock(
+                  (block): Sequential(
+                    (0): Conv1d(256, 256, kernel_size=(5,), stride=(1,), padding=(2,))
+                    (1): GroupNorm(8, 256, eps=1e-05, affine=True)
+                    (2): Mish()
+                  )
+                )
+              )
+              (cond_encoder): Sequential(
+                (0): Mish()
+                (1): Linear(in_features=586, out_features=512, bias=True)
+                (2): Unflatten(dim=-1, unflattened_size=(-1, 1))
+              )
+              (residual_conv): Conv1d(1024, 256, kernel_size=(1,), stride=(1,))
+            )
+            (1): ConditionalResidualBlock1D(
+              (blocks): ModuleList(
+                (0-1): 2 x Conv1dBlock(
+                  (block): Sequential(
+                    (0): Conv1d(256, 256, kernel_size=(5,), stride=(1,), padding=(2,))
+                    (1): GroupNorm(8, 256, eps=1e-05, affine=True)
+                    (2): Mish()
+                  )
+                )
+              )
+              (cond_encoder): Sequential(
+                (0): Mish()
+                (1): Linear(in_features=586, out_features=512, bias=True)
+                (2): Unflatten(dim=-1, unflattened_size=(-1, 1))
+              )
+              (residual_conv): Identity()
+            )
+            (2): Upsample1d(
+              (conv): ConvTranspose1d(256, 256, kernel_size=(4,), stride=(2,), padding=(1,))
+            )
+          )
+        )
+        (down_modules): ModuleList(
+          (0): ModuleList(
+            (0): ConditionalResidualBlock1D(
+              (blocks): ModuleList(
+                (0): Conv1dBlock(
+                  (block): Sequential(
+                    (0): Conv1d(46, 256, kernel_size=(5,), stride=(1,), padding=(2,))
+                    (1): GroupNorm(8, 256, eps=1e-05, affine=True)
+                    (2): Mish()
+                  )
+                )
+                (1): Conv1dBlock(
+                  (block): Sequential(
+                    (0): Conv1d(256, 256, kernel_size=(5,), stride=(1,), padding=(2,))
+                    (1): GroupNorm(8, 256, eps=1e-05, affine=True)
+                    (2): Mish()
+                  )
+                )
+              )
+              (cond_encoder): Sequential(
+                (0): Mish()
+                (1): Linear(in_features=586, out_features=512, bias=True)
+                (2): Unflatten(dim=-1, unflattened_size=(-1, 1))
+              )
+              (residual_conv): Conv1d(46, 256, kernel_size=(1,), stride=(1,))
+            )
+            (1): ConditionalResidualBlock1D(
+              (blocks): ModuleList(
+                (0-1): 2 x Conv1dBlock(
+                  (block): Sequential(
+                    (0): Conv1d(256, 256, kernel_size=(5,), stride=(1,), padding=(2,))
+                    (1): GroupNorm(8, 256, eps=1e-05, affine=True)
+                    (2): Mish()
+                  )
+                )
+              )
+              (cond_encoder): Sequential(
+                (0): Mish()
+                (1): Linear(in_features=586, out_features=512, bias=True)
+                (2): Unflatten(dim=-1, unflattened_size=(-1, 1))
+              )
+              (residual_conv): Identity()
+            )
+            (2): Downsample1d(
+              (conv): Conv1d(256, 256, kernel_size=(3,), stride=(2,), padding=(1,))
+            )
+          )
+          (1): ModuleList(
+            (0): ConditionalResidualBlock1D(
+              (blocks): ModuleList(
+                (0): Conv1dBlock(
+                  (block): Sequential(
+                    (0): Conv1d(256, 512, kernel_size=(5,), stride=(1,), padding=(2,))
+                    (1): GroupNorm(8, 512, eps=1e-05, affine=True)
+                    (2): Mish()
+                  )
+                )
+                (1): Conv1dBlock(
+                  (block): Sequential(
+                    (0): Conv1d(512, 512, kernel_size=(5,), stride=(1,), padding=(2,))
+                    (1): GroupNorm(8, 512, eps=1e-05, affine=True)
+                    (2): Mish()
+                  )
+                )
+              )
+              (cond_encoder): Sequential(
+                (0): Mish()
+                (1): Linear(in_features=586, out_features=1024, bias=True)
+                (2): Unflatten(dim=-1, unflattened_size=(-1, 1))
+              )
+              (residual_conv): Conv1d(256, 512, kernel_size=(1,), stride=(1,))
+            )
+            (1): ConditionalResidualBlock1D(
+              (blocks): ModuleList(
+                (0-1): 2 x Conv1dBlock(
+                  (block): Sequential(
+                    (0): Conv1d(512, 512, kernel_size=(5,), stride=(1,), padding=(2,))
+                    (1): GroupNorm(8, 512, eps=1e-05, affine=True)
+                    (2): Mish()
+                  )
+                )
+              )
+              (cond_encoder): Sequential(
+                (0): Mish()
+                (1): Linear(in_features=586, out_features=1024, bias=True)
+                (2): Unflatten(dim=-1, unflattened_size=(-1, 1))
+              )
+              (residual_conv): Identity()
+            )
+            (2): Downsample1d(
+              (conv): Conv1d(512, 512, kernel_size=(3,), stride=(2,), padding=(1,))
+            )
+          )
+          (2): ModuleList(
+            (0): ConditionalResidualBlock1D(
+              (blocks): ModuleList(
+                (0): Conv1dBlock(
+                  (block): Sequential(
+                    (0): Conv1d(512, 1024, kernel_size=(5,), stride=(1,), padding=(2,))
+                    (1): GroupNorm(8, 1024, eps=1e-05, affine=True)
+                    (2): Mish()
+                  )
+                )
+                (1): Conv1dBlock(
+                  (block): Sequential(
+                    (0): Conv1d(1024, 1024, kernel_size=(5,), stride=(1,), padding=(2,))
+                    (1): GroupNorm(8, 1024, eps=1e-05, affine=True)
+                    (2): Mish()
+                  )
+                )
+              )
+              (cond_encoder): Sequential(
+                (0): Mish()
+                (1): Linear(in_features=586, out_features=2048, bias=True)
+                (2): Unflatten(dim=-1, unflattened_size=(-1, 1))
+              )
+              (residual_conv): Conv1d(512, 1024, kernel_size=(1,), stride=(1,))
+            )
+            (1): ConditionalResidualBlock1D(
+              (blocks): ModuleList(
+                (0-1): 2 x Conv1dBlock(
+                  (block): Sequential(
+                    (0): Conv1d(1024, 1024, kernel_size=(5,), stride=(1,), padding=(2,))
+                    (1): GroupNorm(8, 1024, eps=1e-05, affine=True)
+                    (2): Mish()
+                  )
+                )
+              )
+              (cond_encoder): Sequential(
+                (0): Mish()
+                (1): Linear(in_features=586, out_features=2048, bias=True)
+                (2): Unflatten(dim=-1, unflattened_size=(-1, 1))
+              )
+              (residual_conv): Identity()
+            )
+            (2): Identity()
+          )
+        )
+        (final_conv): Sequential(
+          (0): Conv1dBlock(
+            (block): Sequential(
+              (0): Conv1d(256, 256, kernel_size=(5,), stride=(1,), padding=(2,))
+              (1): GroupNorm(8, 256, eps=1e-05, affine=True)
+              (2): Mish()
+            )
+          )
+          (1): Conv1d(256, 46, kernel_size=(1,), stride=(1,))
+        )
+      )
+    )
+  )
+)
+
+SequenceDataset: normalizing actions...
+  0%|                                                                                  | 0/254 [00:00<?, ?it/s]100%|######################################################################| 254/254 [00:00<00:00, 5291.52it/s]
+
+============= Training Dataset =============
+SequenceDataset (
+	path=/media/wsw/SSD1T1/data/111hand_wiping_1-14_5actiongap_10000points.hdf5
+	obs_keys=('pointcloud', 'robot0_eef_hand', 'robot0_eef_pos', 'robot0_eef_quat')
+	seq_length=20
+	filter_key=none
+	frame_stack=1
+	pad_seq_length=True
+	pad_frame_stack=True
+	goal_mode=none
+	cache_mode=none
+	num_demos=255
+	num_sequences=27901
+)
+
+**************************************************
+Warnings generated by robomimic have been duplicated here (from above) for convenience. Please check them carefully.
+**************************************************
+
+  0%|                                                                                  | 0/500 [00:00<?, ?it/s]  0%|1                                                                         | 1/500 [00:01<14:30,  1.74s/it]  0%|2                                                                         | 2/500 [00:01<06:29,  1.28it/s]  1%|4                                                                         | 3/500 [00:01<03:54,  2.12it/s]  1%|7                                                                         | 5/500 [00:02<02:05,  3.94it/s]  1%|#                                                                         | 7/500 [00:02<01:27,  5.64it/s]  2%|#3                                                                        | 9/500 [00:03<02:14,  3.65it/s]  2%|#4                                                                       | 10/500 [00:03<03:00,  2.72it/s]  2%|#7                                                                       | 12/500 [00:04<03:12,  2.53it/s]  3%|##                                                                       | 14/500 [00:05<03:17,  2.46it/s]  3%|##1                                                                      | 15/500 [00:05<02:48,  2.88it/s]  3%|##3                                                                      | 16/500 [00:06<03:30,  2.30it/s]  3%|##4                                                                      | 17/500 [00:06<02:52,  2.79it/s]  4%|##6                                                                      | 18/500 [00:07<03:42,  2.16it/s]  4%|##9                                                                      | 20/500 [00:08<03:22,  2.37it/s]  4%|###2                                                                     | 22/500 [00:08<03:04,  2.59it/s]  5%|###5                                                                     | 24/500 [00:09<03:09,  2.51it/s]  5%|###7                                                                     | 26/500 [00:10<03:16,  2.41it/s]  6%|####                                                                     | 28/500 [00:11<03:05,  2.54it/s]  6%|####3                                                                    | 30/500 [00:11<03:08,  2.50it/s]  6%|####6                                                                    | 32/500 [00:12<03:06,  2.51it/s]  7%|####9                                                                    | 34/500 [00:13<03:00,  2.59it/s]  7%|#####2                                                                   | 36/500 [00:14<02:56,  2.62it/s]  8%|#####5                                                                   | 38/500 [00:14<02:49,  2.73it/s]  8%|#####8                                                                   | 40/500 [00:15<02:39,  2.88it/s]  8%|######1                                                                  | 42/500 [00:16<02:42,  2.82it/s]  9%|######4                                                                  | 44/500 [00:16<02:34,  2.96it/s]  9%|######7                                                                  | 46/500 [00:17<02:36,  2.90it/s] 10%|#######                                                                  | 48/500 [00:18<02:39,  2.84it/s] 10%|#######3                                                                 | 50/500 [00:19<02:41,  2.78it/s] 10%|#######5                                                                 | 52/500 [00:19<02:46,  2.69it/s] 11%|#######8                                                                 | 54/500 [00:20<02:32,  2.93it/s] 11%|########1                                                                | 56/500 [00:20<02:24,  3.07it/s] 12%|########4                                                                | 58/500 [00:21<02:22,  3.10it/s] 12%|########6                                                                | 59/500 [00:21<02:42,  2.71it/s]
+Traceback (most recent call last):
+  File "train.py", line 646, in <module>
+    main(args)
+  File "train.py", line 555, in main
+    important_stats = train(config, device=device, auto_remove_exp=args.auto_remove_exp, resume=args.resume)
+  File "train.py", line 266, in train
+    step_log = TrainUtils.run_epoch(
+  File "/home/wsw/Dexcap/STEP3_train_policy/robomimic/utils/train_utils.py", line 668, in run_epoch
+    batch = next(data_loader_iter)
+  File "/home/wsw/anaconda3/envs/dexcap/lib/python3.8/site-packages/torch/utils/data/dataloader.py", line 630, in __next__
+    data = self._next_data()
+  File "/home/wsw/anaconda3/envs/dexcap/lib/python3.8/site-packages/torch/utils/data/dataloader.py", line 1327, in _next_data
+    idx, data = self._get_data()
+  File "/home/wsw/anaconda3/envs/dexcap/lib/python3.8/site-packages/torch/utils/data/dataloader.py", line 1293, in _get_data
+    success, data = self._try_get_data()
+  File "/home/wsw/anaconda3/envs/dexcap/lib/python3.8/site-packages/torch/utils/data/dataloader.py", line 1131, in _try_get_data
+    data = self._data_queue.get(timeout=timeout)
+  File "/home/wsw/anaconda3/envs/dexcap/lib/python3.8/multiprocessing/queues.py", line 107, in get
+    if not self._poll(timeout):
+  File "/home/wsw/anaconda3/envs/dexcap/lib/python3.8/multiprocessing/connection.py", line 257, in poll
+    return self._poll(timeout)
+  File "/home/wsw/anaconda3/envs/dexcap/lib/python3.8/multiprocessing/connection.py", line 424, in _poll
+    r = wait([self], timeout)
+  File "/home/wsw/anaconda3/envs/dexcap/lib/python3.8/multiprocessing/connection.py", line 931, in wait
+    ready = selector.select(timeout)
+  File "/home/wsw/anaconda3/envs/dexcap/lib/python3.8/selectors.py", line 415, in select
+    fd_event_list = self._selector.poll(timeout)
+KeyboardInterrupt

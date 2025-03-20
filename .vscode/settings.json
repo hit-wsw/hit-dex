@@ -1,0 +1,5 @@
+{
+    "python.analysis.extraPaths": [
+        "./STEP3_train_policy/robomimic/scripts"
+    ]
+}
