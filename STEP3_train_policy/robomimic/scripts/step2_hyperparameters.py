@@ -3,12 +3,12 @@ import open3d as o3d
 import yaml
 
 # load calibration results
-REALROBOT_RIGHT_HAND_OFFSET_CONFIG_PATH = "/home/wsw/Dexcap/STEP2_build_dataset/config/realrobot_right_hand_offset.yml"
+REALROBOT_RIGHT_HAND_OFFSET_CONFIG_PATH = "STEP2_build_dataset/config/realrobot_right_hand_offset.yml"
 REALROBOT_RIGHT_HAND_OFFSET = None
 with open(REALROBOT_RIGHT_HAND_OFFSET_CONFIG_PATH) as f:
     REALROBOT_RIGHT_HAND_OFFSET = yaml.safe_load(f)
 
-REALROBOT_LEFT_HAND_OFFSET_CONFIG_PATH = "/home/wsw/Dexcap/STEP2_build_dataset/config/realrobot_left_hand_offset.yml"
+REALROBOT_LEFT_HAND_OFFSET_CONFIG_PATH = "STEP2_build_dataset/config/realrobot_left_hand_offset.yml"
 REALROBOT_LEFT_HAND_OFFSET = None
 with open(REALROBOT_LEFT_HAND_OFFSET_CONFIG_PATH) as f:
     REALROBOT_LEFT_HAND_OFFSET = yaml.safe_load(f)

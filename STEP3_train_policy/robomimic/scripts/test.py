@@ -127,7 +127,7 @@ class VisOnlyEnv:
             
 
     def show_pcd(self):
-        i = 25
+        i = 40
         color_pcd = self.pointcloud_data[i]
         pos_right = self.robot0_eef_pos_data[i][:3]
         ori_right = self.robot0_eef_quat_data[i][:4]
@@ -439,7 +439,7 @@ def run_trained_agent(args):
     # create environment
     env = VisOnlyEnv(args.dataset_path, obs_horizon=3)
     env.start_visualization()
-    env.show_pos()
+    env.show_pcd()
 
 
 

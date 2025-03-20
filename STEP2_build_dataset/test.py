@@ -1,7 +1,6 @@
 import numpy as np
 
 
-
 between_cam_3 = np.eye(4)
 between_cam_3[:3, :3] = np.array([[1.0, 0.0, 0.0],
                                        [0.0, 1.0, 0.0],
