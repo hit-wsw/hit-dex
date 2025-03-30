@@ -1,0 +1,9 @@
+<mujoco model="obj_redcube">
+    <worldbody>
+        <!-- 红色方块 -->
+        <body name="obj_redcube" pos="0 0 0" euler="0 0 1.570796">
+            <freejoint/>  <!-- 允许自由移动（6自由度） -->
+            <geom type="box" size="0.06 0.04 0.02" rgba="1 0 0 1" mass="1.0"/>
+        </body>
+    </worldbody>
+</mujoco>

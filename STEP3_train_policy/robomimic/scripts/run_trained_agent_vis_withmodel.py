@@ -200,8 +200,8 @@ class VisOnlyEnv:
         else:
             arrow_color = (0, 255, 255)  # 黄色
 
-        translation = robot0_eef[0:3]
-        rotation_quat = robot0_eef[3:7]
+        translation = robot0_eef[3:6]
+        rotation_quat = robot0_eef[10:14]
         rotation_mat = quat2mat(rotation_quat)
         pose_3 = np.eye(4)
         pose_3[:3, :3] = rotation_mat
@@ -211,7 +211,7 @@ class VisOnlyEnv:
         hand_root = np.array([[0.0, 0.0, 0.0]])
         hand_root = apply_pose_matrix(hand_root, pose_3)
 
-        action_trans = action[:3] / 10.0 * 6
+        action_trans = action[3:6] / 10.0 * 6
         hand_root_next = hand_root + action_trans
 
         hand_root = np.concatenate((hand_root, hand_root_next), axis=0)
@@ -308,7 +308,7 @@ def run_trained_agent(args):
         print(action[14:30])
         print("++++++++++++++++++++++++HAND LEFT+++++++++++++++++++++++")
         print(action[30:])
-        env.vis_gt_action()
+        #env.vis_gt_action()
         #env.save_current_frame
         env.vis_model_action(action)
         env.save_current_frame()
@@ -328,7 +328,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--agent",
         type=str,
-        default = '/media/wsw/SSD1T1/ubuntu/model_epoch_3000.pth',
+        default = '/media/wsw/SSD1T1/data/1-14_model/model_epoch_3000.pth',
         help="path to saved checkpoint pth file",
     )
 

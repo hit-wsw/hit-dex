@@ -127,7 +127,7 @@ class VisOnlyEnv:
             
 
     def show_pcd(self):
-        i = 40
+        i = 15
         color_pcd = self.pointcloud_data[i]
         pos_right = self.robot0_eef_pos_data[i][:3]
         ori_right = self.robot0_eef_quat_data[i][:4]
@@ -459,7 +459,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--dataset_path",
         type=str,
-        default='/media/wsw/SSD1T1/data/111hand_wiping_1-14_5actiongap_10000points.hdf5',
+        default='/media/wsw/SSD1T1/data/hand_packaging_wild_1-20_5ag_10000points.hdf5',
         help="(optional) if provided, an hdf5 file will be written at this path with the rollout data",
     )
 

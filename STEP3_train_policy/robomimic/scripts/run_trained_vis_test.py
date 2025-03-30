@@ -1,42 +1,23 @@
 # ffmpeg -framerate 10 -i saved_current_frames/%d.jpg -c:v mpeg4 -pix_fmt yuv420p saved_run_video.mp4
 
 import argparse
-import os
-import json
 import h5py
-import imageio
-import sys
 import time
 import traceback
 import numpy as np
-from copy import deepcopy
-from tqdm import tqdm
 import cv2
-import re
 import torch
 import open3d as o3d
 from transforms3d.euler import quat2mat
-from step2_pybullet_ik_bimanual import LeapPybulletIK
-
-from glob import glob
 from threading import Thread, Lock
 from run_trained_agent_utils import _back_project_point, apply_pose_matrix
-from transforms3d.quaternions import mat2quat
-from scipy.spatial.transform import Rotation
-from transforms3d.axangles import axangle2mat
-
-import robomimic
 import robomimic.utils.file_utils as FileUtils
-import robomimic.utils.env_utils as EnvUtils
 import robomimic.utils.torch_utils as TorchUtils
 import robomimic.utils.tensor_utils as TensorUtils
-import robomimic.utils.obs_utils as ObsUtils
-from robomimic.utils.log_utils import log_warning
-from robomimic.envs.env_base import EnvBase
-from robomimic.envs.wrappers import EnvWrapper
-from robomimic.algo import RolloutPolicy
 from robomimic.scripts.playback_dataset import DEFAULT_CAMERAS
-import matplotlib.pyplot as plt
+from mujoco_parser import *
+from utility_mu import *
+from transformation import *
 
 
 class VisOnlyEnv:
@@ -101,6 +82,31 @@ class VisOnlyEnv:
                 robot0_eef_pos = self.robot0_eef_pos_data[(self.current_index-self.obs_horizon):self.current_index]
                 robot0_eef_quat = self.robot0_eef_quat_data[(self.current_index-self.obs_horizon):self.current_index]
                 robot0_eef_hand = self.robot0_eef_hand_data[(self.current_index-self.obs_horizon):self.current_index]
+
+                fig = plt.figure(figsize=(8, 6))
+                ax = fig.add_subplot(111, projection='3d')
+                
+                # 获取最后一个点云数据
+                last_pcd = pointcloud[-1]
+                
+                # 绘制点云
+                ax.scatter(last_pcd[:, 0], last_pcd[:, 1], last_pcd[:, 2], 
+                        c=last_pcd[:, 3:6], s=1, marker='.')
+                
+                ax.scatter([0], [0], [0], c='red', s=100, marker='o', label='Origin (0,0,0)')
+                
+                ax.set_xlabel('X')
+                ax.set_ylabel('Y')
+                ax.set_zlabel('Z')
+                ax.set_title('Last Collected Point Cloud')
+                
+                
+                # 调整视角
+                ax.view_init(elev=20, azim=45)
+                
+                plt.tight_layout()
+                plt.show(block=False)
+                plt.pause(0.1)
 
                 # postprocess data frames
                 #agentview_image = ObsUtils.batch_image_hwc_to_chw(agentview_image) / 255.0
@@ -273,8 +279,14 @@ class VisOnlyEnv:
 
 def run_trained_agent(args):
 
+    xml_path = './STEP3_train_policy/robomimic/scripts/asset/leap_hand_mesh/scene_floor.xml'
+    env_mu = MuJoCoParserClass(name='LEAP',rel_xml_path=xml_path,verbose=True)
+    leap_link_name = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15']
 
-    leapPybulletIK = LeapPybulletIK()
+    env_mu.set_p_body(body_name='leap_base',p=np.array([0,0,0.5]))
+    idxs_fwd = env_mu.get_idxs_fwd(joint_names=leap_link_name)
+    env_mu.init_viewer(transparent=True)
+
     # load ckpt dict and get algo name for sanity checks
     algo_name, ckpt_dict = FileUtils.algo_name_from_checkpoint(ckpt_path=args.agent)
 
@@ -298,40 +310,60 @@ def run_trained_agent(args):
         if env.demo_index > 5:
             break
         state, done = env.get_state()
-        print("++++++++++++++++++++++++STATE DONE+++++++++++++++++++++++")
 
-        # image = (state["agentview_image"][0].permute(1, 2, 0).detach().cpu().numpy() * 255.0).astype(np.uint8)
-        # cv2.imwrite("color_image.jpg", image)
-        # break
-
-        # print(state["agentview_image"].size(), state["robot0_eef_pos"].size())
         cur = time.time()
         action = policy(ob = state)
         times = time.time()-cur
         print('time:[%f]'%times)
-        
-        print("++++++++++++++++++++++++POSE RIGHT+++++++++++++++++++++++")
+
+        #print("++++++++++++++++++++++++POSE RIGHT+++++++++++++++++++++++")
         pose_right = action[0:3]
-        print(action[0:3])
-        print("++++++++++++++++++++++++POSE LEFT+++++++++++++++++++++++")
+        #print(action[0:3])
+        #print("++++++++++++++++++++++++POSE LEFT+++++++++++++++++++++++")
         pose_left = action[3:6]
-        print(action[3:6])
-        print("++++++++++++++++++++++++QUAT RIGHT+++++++++++++++++++++++")
+        #print(action[3:6])
+        #print("++++++++++++++++++++++++QUAT RIGHT+++++++++++++++++++++++")
         quat_right = action[6:10]
-        print(action[6:10])
-        print("++++++++++++++++++++++++QUAT LEFT+++++++++++++++++++++++")
+        #print(action[6:10])
+        #print("++++++++++++++++++++++++QUAT LEFT+++++++++++++++++++++++")
         quat_left = action[10:14]
-        print(action[10:14])
-        print("++++++++++++++++++++++++HAND RIGHT+++++++++++++++++++++++")
+        #print(action[10:14])
+        #print("++++++++++++++++++++++++HAND RIGHT+++++++++++++++++++++++")
         hand_right = action[14:30]
-        print(action[14:30])
-        print("++++++++++++++++++++++++HAND LEFT+++++++++++++++++++++++")
+        #print(action[14:30])
+        #print("++++++++++++++++++++++++HAND LEFT+++++++++++++++++++++++")
         hand_left = action[30:]
-        print(action[30:])
+        #print(action[30:])
+        '''print("++++++++++++++++++++++++HAND RIGHT+++++++++++++++++++++++")
+        print((state['robot0_eef_hand'][-1][:16].cpu().numpy() - hand_right).max())
 
+        print("++++++++++++++++++++++++HAND RIGHT+++++++++++++++++++++++")
+        print((state['robot0_eef_pos'][-1][:3].cpu().numpy() - pose_right).max())
 
+        print("++++++++++++++++++++++++HAND RIGHT+++++++++++++++++++++++")
+        print((state['robot0_eef_quat'][-1][:4].cpu().numpy() - quat_right).max())
 
-        right_hand_points, left_hand_points = leapPybulletIK.vis_hand(pose_right, quat_right, hand_right, pose_right, quat_left, hand_left)
+        print("++++++++++++++++++++++++HAND LEFT+++++++++++++++++++++++")
+        print((state['robot0_eef_hand'][-1][16:].cpu().numpy() - hand_left).max())
+
+        print("++++++++++++++++++++++++HAND LEFT+++++++++++++++++++++++")
+        print((state['robot0_eef_pos'][-1][3:].cpu().numpy() - pose_left).max())
+
+        print("++++++++++++++++++++++++HAND LEFT+++++++++++++++++++++++")
+        print((state['robot0_eef_quat'][-1][4:].cpu().numpy() - quat_left).max())
+        print("\n")
+        print("\n")
+        print("\n")'''
+
+        #env_mu.set_R_base_body(body_name='leap_base',R=quat2mat(quat_right))
+        #env_mu.set_p_body(body_name='leap_base',p=pose_right)
+        env_mu.forward(q=hand_right,joint_idxs=idxs_fwd)
+        
+        if env_mu.loop_every(tick_every=1):
+            env_mu.plot_T()
+            env_mu.plot_body_T(body_name='leap_base')
+            env_mu.plot_joint_axis(axis_len=0.025,axis_r=0.005) # revolute joints
+            env_mu.render()
         #env.save_current_frame()
 
         if done:
@@ -349,7 +381,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--agent",
         type=str,
-        default = '/media/wsw/SSD1T1/ubuntu/model_epoch_3000.pth',
+        default = '/media/wsw/SSD1T1/data/1-20_model/model_epoch_3000.pth',
         help="path to saved checkpoint pth file",
     )
 
@@ -357,9 +389,10 @@ if __name__ == "__main__":
     parser.add_argument(
         "--dataset_path",
         type=str,
-        default='/media/wsw/SSD1T1/data/hand_wiping_1-14_5actiongap_10000points.hdf5',
+        default='/media/wsw/SSD1T1/data/hand_packaging_wild_1-20_5ag_10000points.hdf5',
         help="(optional) if provided, an hdf5 file will be written at this path with the rollout data",
     )
+
 
     # for seeding before starting rollouts
     parser.add_argument(
