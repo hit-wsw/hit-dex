@@ -396,6 +396,36 @@ class LeapPybulletIK():
 
         combined_jointPoses_2 = (jointPoses_2[0:4] + (0.0,) + jointPoses_2[4:8] + (0.0,) + jointPoses_2[8:12] + (0.0,) + jointPoses_2[12:16] + (0.0,))
         combined_jointPoses_2 = list(combined_jointPoses_2)
+
+        combined_jointPoses = (jointPoses[0:4] + (0.0,) + jointPoses[4:8] + (0.0,) + jointPoses[8:12] + (0.0,) + jointPoses[12:16] + (0.0,))
+        combined_jointPoses = list(combined_jointPoses)
+                # map results to real robot
+        real_right_robot_hand_q = np.array([0.0 for _ in range(16)])
+        real_left_robot_hand_q = np.array([0.0 for _ in range(16)])
+
+        real_right_robot_hand_q[0:4] = jointPoses[0:4]
+        real_right_robot_hand_q[4:8] = jointPoses[4:8]
+        real_right_robot_hand_q[8:12] = jointPoses[8:12]
+        real_right_robot_hand_q[12:16] = jointPoses[12:16]
+        real_right_robot_hand_q[0:2] = real_right_robot_hand_q[0:2][::-1]
+        real_right_robot_hand_q[4:6] = real_right_robot_hand_q[4:6][::-1]
+        real_right_robot_hand_q[8:10] = real_right_robot_hand_q[8:10][::-1]
+
+        real_left_robot_hand_q[0:4] = jointPoses_2[0:4]
+        real_left_robot_hand_q[4:8] = jointPoses_2[4:8]
+        real_left_robot_hand_q[8:12] = jointPoses_2[8:12]
+        real_left_robot_hand_q[12:16] = jointPoses_2[12:16]
+        real_left_robot_hand_q[0:2] = real_left_robot_hand_q[0:2][::-1]
+        real_left_robot_hand_q[4:6] = real_left_robot_hand_q[4:6][::-1]
+        real_left_robot_hand_q[8:10] = real_left_robot_hand_q[8:10][::-1]
+        
+
+        jointPoses_2 = tuple(real_left_robot_hand_q)
+        jointPoses = tuple(real_right_robot_hand_q)
+
+        combined_jointPoses_2 = (jointPoses_2[0:4] + (0.0,) + jointPoses_2[4:8] + (0.0,) + jointPoses_2[8:12] + (0.0,) + jointPoses_2[12:16] + (0.0,))
+        combined_jointPoses_2 = list(combined_jointPoses_2)
+
         combined_jointPoses = (jointPoses[0:4] + (0.0,) + jointPoses[4:8] + (0.0,) + jointPoses[8:12] + (0.0,) + jointPoses[12:16] + (0.0,))
         combined_jointPoses = list(combined_jointPoses)
 
@@ -412,7 +442,7 @@ class LeapPybulletIK():
                 velocityGain=1,
             )
 
-            p.setJointMotorControl2(
+            '''p.setJointMotorControl2(
                 bodyIndex=self.LeapId_2,
                 jointIndex=i,
                 controlMode=p.POSITION_CONTROL,
@@ -421,7 +451,7 @@ class LeapPybulletIK():
                 force=500,
                 positionGain=0.3,
                 velocityGain=1,
-            )
+            )'''
 
         p.resetBasePositionAndOrientation(
             self.LeapId,
@@ -431,28 +461,18 @@ class LeapPybulletIK():
 
         after_left_offset_base = rotate_vector_by_quaternion_using_matrix(self.leap_center_offset, leftHand_rot)
         after_left_offset_base[1] += self.left_offset
-        p.resetBasePositionAndOrientation(
+        '''p.resetBasePositionAndOrientation(
             self.LeapId_2,
             after_left_offset_base,
             leftHand_rot,
-        )
+        )'''
 
         self.rest_target_vis()
 
-        real_right_robot_hand_q = np.array([0.0 for _ in range(16)])
-        real_left_robot_hand_q = np.array([0.0 for _ in range(16)])
-        
-        real_left_robot_hand_q[0:4] = jointPoses_2[0:4]
-        real_left_robot_hand_q[4:8] = jointPoses_2[4:8]
-        real_left_robot_hand_q[8:12] = jointPoses_2[8:12]
-        real_left_robot_hand_q[12:16] = jointPoses_2[12:16]
-        real_left_robot_hand_q[0:2] = real_left_robot_hand_q[0:2][::-1]
-        real_left_robot_hand_q[4:6] = real_left_robot_hand_q[4:6][::-1]
-        real_left_robot_hand_q[8:10] = real_left_robot_hand_q[8:10][::-1]
 
         # generate pointcloud of the left and right hand with forward kinematics
         right_hand_pointcloud, left_hand_pointcloud = self.get_mesh_pointcloud(real_right_robot_hand_q, real_left_robot_hand_q)
-
+        
         # further map joints to real robot
         real_right_robot_hand_q += np.pi
         real_left_robot_hand_q += np.pi

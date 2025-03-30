@@ -1,0 +1,26 @@
+<mujoco model="obj_box">
+    <worldbody>
+        <!-- 旋转90度的深色高筒纸盒子 -->
+        <body name="obj_box" pos="0 0 0" euler="0 0 1.570796">
+            <freejoint/>  <!-- 允许自由移动（6自由度） -->
+            
+            <!-- 盒子底部 - 旋转后长宽尺寸互换 -->
+            <geom type="box" size="0.12 0.18 0.005" pos="0 0 -0.0275" rgba="0.5 0.35 0.2 1" mass="0.5"/>
+            
+            <!-- 盒子前侧 - 尺寸参数互换 -->
+            <geom type="box" size="0.12 0.005 0.05" pos="0 -0.175 0.015" rgba="0.5 0.35 0.2 1" mass="0.3"/>
+            
+            <!-- 盒子后侧 -->
+            <geom type="box" size="0.12 0.005 0.05" pos="0 0.175 0.015" rgba="0.5 0.35 0.2 1" mass="0.3"/>
+            
+            <!-- 盒子左侧 - 尺寸参数互换 -->
+            <geom type="box" size="0.005 0.18 0.05" pos="-0.115 0 0.015" rgba="0.5 0.35 0.2 1" mass="0.3"/>
+            
+            <!-- 盒子右侧 -->
+            <geom type="box" size="0.005 0.18 0.05" pos="0.115 0 0.015" rgba="0.5 0.35 0.2 1" mass="0.3"/>
+            
+            <!-- 内部空间可视化 - 尺寸参数互换 -->
+            <geom type="box" size="0.11 0.17 0.045" pos="0 0 0.0175" rgba="0.3 0.2 0.1 0.3" mass="0.001" contype="0" conaffinity="0"/>
+        </body>
+    </worldbody>
+</mujoco>

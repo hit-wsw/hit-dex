@@ -516,6 +516,7 @@ class LeapPybulletIK():
         real_left_robot_hand_q[0:2] = real_left_robot_hand_q[0:2][::-1]
         real_left_robot_hand_q[4:6] = real_left_robot_hand_q[4:6][::-1]
         real_left_robot_hand_q[8:10] = real_left_robot_hand_q[8:10][::-1]
+        real_right_robot_hand_q -= np.pi
 
         # generate pointcloud of the left and right hand with forward kinematics
         right_hand_pointcloud, left_hand_pointcloud = self.get_mesh_pointcloud(real_right_robot_hand_q, real_left_robot_hand_q)
