@@ -96,3 +96,19 @@ python transform_to_robot_table.py --directory save_data_scenario_1
 咕咕几个月又更新了！本次更新内容如下：
 1. 针对数据处理部分（STEP2），本次对robot0_ee_pos进行了修改，之前的数据是经过robot_to_hand变换过的姿态，现在更新为LEAPHand原点的姿态。这样可以更好的在仿真环境中进行处理，且泛用性增加。（robot_to_hand这个变换我没太看懂，其中包含了一些没有注释的参数，可能是原作者真实环境机械臂末端到手的变换矩阵）
 2. 针对训练/验证部分，本次修改了run_trained_agent_vis_withmodel.py，使其能正常运行。并且对训练代码增加了注释。
+## 2025.03.30
+新增了mujoco仿真功能，
+ 
+运行
+```bash
+cd STEP3_train_policy/robomimic/scripts
+python run_trained_leap_mujoco.py
+```
+即可在mujoco中查看手部的动作。
+
+运行
+```bash
+cd STEP3_train_policy/robomimic/scripts
+python run_trained_agent_in_mujoco.py
+```
+即可在用mujoco中搭建的仿真中运行策略。
