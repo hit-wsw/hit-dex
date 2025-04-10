@@ -100,7 +100,7 @@
         },
         "goal_mode": null,
         "cuda": true,
-        "batch_size": 8,
+        "batch_size": 16,
         "num_epochs": 3000,
         "seed": 1,
         "data_format": "robomimic"

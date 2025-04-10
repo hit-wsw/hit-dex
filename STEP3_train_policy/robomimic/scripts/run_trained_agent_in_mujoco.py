@@ -206,6 +206,7 @@ while env.is_viewer_alive():
             pose_right = action[0:3];pose_left = action[3:6]
             quat_right = action[6:10];quat_left = action[10:14]
             hand_right = action[14:30];hand_left = action[30:]
+            
             hand_right = trans_hand_idx(hand_right);hand_left = trans_hand_idx(hand_left)
             T_ee_r = trans_pq_2_T(pose_right,quat_right);T_ee_l = trans_pq_2_T(pose_left,quat_left)
             T_ee_r_world = T_265 @ T_ee_r ; T_ee_l_world = T_265 @ T_ee_l 
