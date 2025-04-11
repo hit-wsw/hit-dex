@@ -1,15 +1,20 @@
 # 本仓库用于HIT-DEX交流使用
 
 # 修改日志
-## 2024.10.11
-修改了采集手套数据中的字典命名问题，使其能正常与电脑进行通信，并修改传输的关节名称
+## 2025.04.11
+1. 新增了对unitree g1机器人采集的数据（lerobot环境下）进行处理、生成hdf5文件的代码：
+   ```bash
+    python STEP2_build_dataset/demo_create_hdf5_g1.py
+    ```
+    注意修改文件夹路径，详细代码参考dataset_utils_g1.py
+    注意此代码暂时只支持lerobot数据格式。
 
-修改了相机采集时出现的序列号与调动问题，寻找合适的realsense固件以同时启动L515、T265。
-## 2024.10.14
-修改了数据对齐与生成变换矩阵时产生的路径依赖问题，修改了代码执行顺序，使代码能正确运行。
-## 2025.03.19
-1. 针对数据处理部分（STEP2），本次对robot0_ee_pos进行了修改，之前的数据是经过robot_to_hand变换过的姿态，现在更新为LEAPHand原点的姿态。这样可以更好的在仿真环境中进行处理，且泛用性增加。（robot_to_hand这个变换我没太看懂，其中包含了一些没有注释的参数，可能是原作者真实环境机械臂末端到手的变换矩阵）
-2. 针对训练/验证部分，本次修改了run_trained_agent_vis_withmodel.py，使其能正常运行。并且对训练代码增加了注释。
+2. 新增基于g1的训练代码diffusion_policy_g1，暂时只是在dexcap的dp上进行小范围的修改，可以通过设置config执行此policy的训练：
+   ```bash
+   python STEP3_train_policy/robomimic/scripts/train.py --config STEP3_train_policy/robomimic/training_config/diffusion_policy_pcd_g1.json
+   ```
+   注意，后续编写新的algo时记得更新algo/__init__.py、config/__init__.py与相应的config文件。
+
 ## 2025.03.30
 新增了mujoco仿真功能，
  
@@ -27,19 +32,17 @@ python run_trained_agent_in_mujoco.py
 ```
 即可在用mujoco中搭建的仿真中运行策略。
 
-## 2025.04.11
-1. 新增了对unitree g1机器人采集的数据（lerobot环境下）进行处理、生成hdf5文件的代码：
-   ```bash
-    python STEP2_build_dataset/demo_create_hdf5_g1.py
-    ```
-    注意修改文件夹路径，详细代码参考dataset_utils_g1.py
-    注意此代码暂时只支持lerobot数据格式。
+## 2025.03.19
+1. 针对数据处理部分（STEP2），本次对robot0_ee_pos进行了修改，之前的数据是经过robot_to_hand变换过的姿态，现在更新为LEAPHand原点的姿态。这样可以更好的在仿真环境中进行处理，且泛用性增加。（robot_to_hand这个变换我没太看懂，其中包含了一些没有注释的参数，可能是原作者真实环境机械臂末端到手的变换矩阵）
+2. 针对训练/验证部分，本次修改了run_trained_agent_vis_withmodel.py，使其能正常运行。并且对训练代码增加了注释。
 
-2. 新增基于g1的训练代码diffusion_policy_g1，暂时只是在dexcap的dp上进行小范围的修改，可以通过设置config执行此policy的训练：
-   ```bash
-   python STEP3_train_policy/robomimic/scripts/train.py --config STEP3_train_policy/robomimic/training_config/diffusion_policy_pcd_g1.json
-   ```
-   注意，后续编写新的algo时记得更新algo/__init__.py、config/__init__.py与相应的config文件。
+## 2024.10.14
+修改了数据对齐与生成变换矩阵时产生的路径依赖问题，修改了代码执行顺序，使代码能正确运行。
+
+## 2024.10.11
+修改了采集手套数据中的字典命名问题，使其能正常与电脑进行通信，并修改传输的关节名称
+
+修改了相机采集时出现的序列号与调动问题，寻找合适的realsense固件以同时启动L515、T265。
 
 
 
