@@ -365,7 +365,8 @@ def process_hdf5(output_hdf5_file, dataset_folders, action_gap, num_points_to_sa
 
         # calculate the mean of the initial starting position
         mean_init_pos = np.array(mean_init_pos).mean(axis=0)
-        mean_init_quat = mean_init_quat[0]
+        #mean_init_quat = mean_init_quat[0]
+        mean_init_quat = np.array(mean_init_quat).mean(axis=0)
         mean_init_hand = np.array(mean_init_hand).mean(axis=0)
         output_data_group.attrs['mean_init_pos'] = mean_init_pos
         output_data_group.attrs['mean_init_quat'] = mean_init_quat

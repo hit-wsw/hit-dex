@@ -50,3 +50,16 @@ o3d_depth_intrinsic = o3d.camera.PinholeCameraIntrinsic(
     897.86669921875,
     657.4981079101562,
     364.30950927734375)
+
+d435i_depth_intrinsic = o3d.camera.PinholeCameraIntrinsic(
+    1280, 720,
+    923.995567,
+    923.492024,
+    620.892371,
+    384.178306)
+
+head_pose = np.eye(4)
+head_pose[:3, :3] = np.array([[1.0, 0.0, 0.0],
+                                [0.0, 1.0, 0.0],
+                                [0.0, 0.0, 1.0]])
+head_pose[:3, 3] = np.array([0.0, 0.0, 0.0])
