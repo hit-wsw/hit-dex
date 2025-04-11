@@ -72,7 +72,7 @@ def process_hdf5(output_hdf5_file, metadata_root, action_gap, num_points_to_samp
                     # process pointcloud
                     color_image_o3d = o3d.io.read_image(color_jpg_path)
                     depth_image_o3d = o3d.io.read_image(depth_png_path)
-                    max_depth = 1000
+                    max_depth = 1
                     depth_array = np.asarray(depth_image_o3d)
                     mask = depth_array > max_depth
                     depth_array[mask] = 0

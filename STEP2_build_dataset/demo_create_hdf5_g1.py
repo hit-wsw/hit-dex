@@ -1,8 +1,8 @@
 from dataset_utils_g1 import *
 
-metadata_root = '/media/wsw/SSD1T1/data/metadata'
+metadata_root = '/media/wsw/SSD1T1/data/g1_sim_data'
 
-action_gap = 5
+action_gap = 2
 num_points_to_sample = 10000
 
 output_hdf5_file = '/media/wsw/SSD1T1/data/g1_{}actiongap_{}points.hdf5'.format(action_gap, num_points_to_sample)
