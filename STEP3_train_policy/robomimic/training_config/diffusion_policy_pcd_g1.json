@@ -7,7 +7,7 @@
             "terminal_output_to_txt": true,
             "log_tb": true,
             "log_wandb": false,
-            "wandb_proj_name": "debug"
+            "wandb_proj_name": "g1_sim"
         },
         "save": {
             "enabled": true,

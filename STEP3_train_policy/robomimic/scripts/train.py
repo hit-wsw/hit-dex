@@ -617,7 +617,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--dataset",
         type=str,
-        default='/media/wsw/SSD1T1/data/g1_5actiongap_10000points.hdf5',
+        default='/media/wsw/SSD1T1/data/g1_1actiongap_10000points.hdf5',
         #default='/media/wsw/SSD1T1/data/111hand_wiping_1-14_5actiongap_10000points.hdf5',
         help="(optional) if provided, override the dataset path defined in the config",
     )

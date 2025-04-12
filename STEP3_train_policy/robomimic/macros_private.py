@@ -9,11 +9,11 @@ DEBUG = False
 VISUALIZE_RANDOMIZER = False
 
 # wandb entity (eg. username or team name)
-WANDB_ENTITY = None
+WANDB_ENTITY = 'hit_wsw-harbin-institute-of-technology'
 
 # wandb api key (obtain from https://wandb.ai/authorize)
 # alternatively, set up wandb from terminal with `wandb login`
-WANDB_API_KEY = None
+WANDB_API_KEY = '10b15349c9207c9db5d068b1cb4fda653e9e72d3'
 
 
 ### Slack Notifications ###
