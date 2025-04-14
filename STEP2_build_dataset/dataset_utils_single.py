@@ -13,20 +13,6 @@ def read_pose_data(frame_path, demo_path, fixed_trans_to_robot_table, first_fram
 
     cam_pose_path = os.path.join(frame_path, "pose.txt")
 
-    # load left hand pose
-    left_pose_path = os.path.join(frame_path, "pose_2.txt")
-    left_hand_pos_path = os.path.join(frame_path, "left_hand_joint.txt")
-    left_hand_ori_path = os.path.join(frame_path, "left_hand_joint_ori.txt")
-    left_hand_off_path = os.path.join(demo_path, "calib_offset_left.txt")
-    left_hand_off_ori_path = os.path.join(demo_path, "calib_ori_offset_left.txt")
-
-    pose_2 = np.loadtxt(left_pose_path)
-    pose_2[:3, 3] += fixed_trans_to_robot_table.T
-    pose_2 = pose_2 @ between_cam_2
-
-    left_hand_joint_xyz = np.loadtxt(left_hand_pos_path)
-    left_hand_joint_xyz = translate_wrist_to_origin(left_hand_joint_xyz)  # canonical view by translate to origin
-    left_hand_wrist_ori = np.loadtxt(left_hand_ori_path)[0]
 
     # load right hand pose
     pose_path = os.path.join(frame_path, "pose_3.txt")
@@ -43,58 +29,10 @@ def read_pose_data(frame_path, demo_path, fixed_trans_to_robot_table, first_fram
     right_hand_joint_xyz = translate_wrist_to_origin(right_hand_joint_xyz)  # canonical view by translate to origin
     right_hand_wrist_ori = np.loadtxt(hand_ori_path)[0]
 
-    right_hand_target, left_hand_target, right_hand_points, left_hand_points = leapPybulletIK.compute_IK(right_hand_joint_xyz, right_hand_wrist_ori, left_hand_joint_xyz, left_hand_wrist_ori)
+    right_hand_target, right_hand_points = leapPybulletIK.compute_IK_single(right_hand_joint_xyz, right_hand_wrist_ori)
     np.savetxt(os.path.join(frame_path, "right_joints.txt"), right_hand_target)
-    np.savetxt(os.path.join(frame_path, "left_joints.txt"), left_hand_target)
-
-    # convert left hand pose
-    left_rotation_matrix = Rotation.from_quat(left_hand_wrist_ori).as_matrix().T
-    left_joint_xyz_reshaped = left_hand_joint_xyz[:, :, np.newaxis]
-    left_transformed_joint_xyz = np.matmul(left_rotation_matrix, left_joint_xyz_reshaped)
-    left_hand_joint_xyz = left_transformed_joint_xyz[:, :, 0]
-    left_hand_joint_xyz[:, -1] = -left_hand_joint_xyz[:, -1]  # z-axis revert
-    rotation_matrix = axangle2mat(np.array([0, 1, 0]), -np.pi * 1 / 2)  # y-axis rotate
-    left_hand_joint_xyz = np.dot(left_hand_joint_xyz, rotation_matrix.T)
-    rotation_matrix = axangle2mat(np.array([1, 0, 0]), np.pi * 1 / 2)  # x-axis rotate
-    left_hand_joint_xyz = np.dot(left_hand_joint_xyz, rotation_matrix.T)
-    rotation_matrix = axangle2mat(np.array([0, 0, 1]), -np.pi * 1 / 2)  # z-axis rotate
-    left_hand_joint_xyz = np.dot(left_hand_joint_xyz, rotation_matrix.T)
-    
-    left_hand_ori_offset = np.loadtxt(left_hand_off_ori_path)
-    left_hand_joint_xyz = np.dot(left_hand_joint_xyz, euler2mat(*left_hand_ori_offset).T)  # rotation calibration
-    left_hand_offset = np.loadtxt(left_hand_off_path)
-    left_hand_joint_xyz += left_hand_offset
-    left_hand_joint_xyz = apply_pose_matrix(left_hand_joint_xyz, pose_2)
-
-    update_pose_2 = copy.deepcopy(pose_2)
-    update_pose_2[:3, 3] = left_hand_joint_xyz[0]
-
-    left_hand_joint_xyz = apply_pose_matrix(left_hand_joint_xyz, inverse_transformation(update_pose_2))
-
-    # important! since the camera mount on the gloves are 45 degree facing up, we need to convert that 45 degree here to get the correct hand orientation
-    rotation_45lookup_matrix = axangle2mat(np.array([1, 0, 0]), np.pi * 1 / 4)  # z-axis rotate
-    update_pose_2[:3, :3] = np.dot(update_pose_2[:3, :3], rotation_45lookup_matrix.T)
-    update_pose_21 = update_pose_2
-    if not first_frame:
-        update_pose_2 = hand_to_robot_left(update_pose_2)
-
-        mat = np.array([[0, -1, 0],[0, 0, 1],[-1, 0, 0]])
-        update_pose_21 = robot_to_hand_left(update_pose_2)
-        hand_ori1 = update_pose_21[:3, :3]
-        offset1 = np.array([[0.02, 0.05, -0.1]]);offset1 = offset1 @ hand_ori1.T
-        pos_left = update_pose_21[:3, 3].reshape(1, 3) + offset1
-        pos_left = pos_left.reshape(3,1)
-        update_pose_21[:3,3] = pos_left.flatten()
-        update_pose_21[:3,:3] = hand_ori1 @ mat
 
 
-    left_hand_translation = update_pose_2[:3, 3]
-    left_hand_rotation_matrix = update_pose_2[:3, :3]
-    left_leap_pos = update_pose_21[:3, 3]
-    left_leap_rot = update_pose_21[:3, :3]
-
-    left_hand_quaternion = mat2quat(left_hand_rotation_matrix)
-    left_leap_quat = mat2quat(left_leap_rot)
 
     # convert right hand pose
     right_rotation_matrix = Rotation.from_quat(right_hand_wrist_ori).as_matrix().T
@@ -153,12 +91,9 @@ def read_pose_data(frame_path, demo_path, fixed_trans_to_robot_table, first_fram
     cam_corrected_pose = cam_corrected_pose.flatten()
 
     return (np.concatenate([right_hand_translation, right_hand_quaternion, right_hand_target,right_leap_pos,right_leap_quat]),#leap
-            np.concatenate([left_hand_translation, left_hand_quaternion, left_hand_target,left_leap_pos,left_leap_quat]),#leap
             cam_corrected_pose,
             right_hand_joint_xyz.flatten(),
-            left_hand_joint_xyz.flatten(),
-            right_hand_points,#leap pointcloud
-            left_hand_points)#leap pointcloud
+            right_hand_points)#leap pointcloud
 
 def process_hdf5(output_hdf5_file, dataset_folders, action_gap, num_points_to_sample, in_wild_data=False):
     global R_delta_init
@@ -192,7 +127,7 @@ def process_hdf5(output_hdf5_file, dataset_folders, action_gap, num_points_to_sa
             for clip in clip_marks:
 
                 # save frame0 & update R_delta_init
-                frame0_pose_data, frame0_left_pose_data, _, _, _, _, _ = read_pose_data(os.path.join(dataset_folder, f'frame_0'), dataset_folder, fixed_trans_to_robot_table=fixed_trans_to_robot_table, first_frame=True)
+                frame0_pose_data, _, _, _, = read_pose_data(os.path.join(dataset_folder, f'frame_0'), dataset_folder, fixed_trans_to_robot_table=fixed_trans_to_robot_table, first_frame=True)
                 update_R_delta_init(frame0_pose_data[:3], frame0_pose_data[3:7])
 
                 # Get start and end frame numbers
@@ -203,10 +138,8 @@ def process_hdf5(output_hdf5_file, dataset_folders, action_gap, num_points_to_sa
                 agentview_images = []
                 pointcloud = []
                 poses = []
-                poses_left = []
                 states = []
                 glove_states = []
-                left_glove_states = []
                 labels = []
 
                 for frame_number in list(range(start_frame, end_frame + 1)):
@@ -216,18 +149,15 @@ def process_hdf5(output_hdf5_file, dataset_folders, action_gap, num_points_to_sa
                     frame_path = os.path.join(dataset_folder, frame_folder)
 
                     # load hand pose data
-                    pose_data, left_pose_data, cam_data, glove_data, left_glove_data, right_hand_points, left_hand_points = read_pose_data(frame_path, dataset_folder, fixed_trans_to_robot_table=fixed_trans_to_robot_table)
+                    pose_data, cam_data, glove_data, right_hand_points = read_pose_data(frame_path, dataset_folder, fixed_trans_to_robot_table=fixed_trans_to_robot_table)
                     poses.append(pose_data)
-                    poses_left.append(left_pose_data)
 
                     states.append(cam_data)
                     glove_states.append(glove_data)
-                    left_glove_states.append(left_glove_data)
 
                     # process image
                     resized_image = resize_image(image_path)
                     resized_image, right_hand_show = mask_image(resized_image, pose_data, cam_data)
-                    resized_image, left_hand_show = mask_image(resized_image, left_pose_data, cam_data, left=True)
                     agentview_images.append(resized_image)
 
                     # process pointcloud
@@ -254,11 +184,6 @@ def process_hdf5(output_hdf5_file, dataset_folders, action_gap, num_points_to_sa
                         colored_hand_point_cloud = np.concatenate((transformed_point_cloud, np.zeros((transformed_point_cloud.shape[0], 3))), axis=1)
                         color_pcd = np.concatenate((color_pcd, colored_hand_point_cloud), axis=0)
 
-                    if left_hand_show: # detected left hand in the view, merge left leap hand pointcloud into inputs
-                        transformed_point_cloud_left = transform_left_leap_pointcloud_to_camera_frame(left_hand_points, left_pose_data)
-
-                        colored_hand_point_cloud_left = np.concatenate((transformed_point_cloud_left, np.zeros((transformed_point_cloud_left.shape[0], 3))), axis=1)
-                        color_pcd = np.concatenate((color_pcd, colored_hand_point_cloud_left), axis=0)
 
                     # remove the redundant points bellow the table surface and background
                     centroid = np.mean(robot_table_corner_points, axis=0)
@@ -298,30 +223,17 @@ def process_hdf5(output_hdf5_file, dataset_folders, action_gap, num_points_to_sa
                     cv2.waitKey(1)
 
                 poses = np.array(poses)
-                robot0_eef_pos_right = poses[:, :3]
-                robot0_eef_quat_right = poses[:, 3:7]
                 robot0_eef_hand = (poses[:, 7:23] - np.pi) * 0.5 # scale the hand joint positions
                 leap0_eef_pos = poses[:, 23:26]
                 leap0_eef_quat = poses[:, 26:30]
 
-                poses_left = np.array(poses_left)
-                robot0_eef_pos_left = poses_left[:, :3]
-                robot0_eef_quat_left = poses_left[:, 3:7]
-                robot0_eef_hand_left = (poses_left[:, 7:23] - np.pi) * 0.5 # scale the hand joint positions
-                leap0_eef_pos_left = poses_left[:, 23:26]
-                leap0_eef_quat_left = poses_left[:, 26:30]
-
-                robot0_eef_pos = np.concatenate((leap0_eef_pos, leap0_eef_pos_left), axis=-1)
-                robot0_eef_quat = np.concatenate((leap0_eef_quat, leap0_eef_quat_left), axis=-1)
-                robot0_eef_hand = np.concatenate((robot0_eef_hand, robot0_eef_hand_left), axis=-1)
-
+                robot0_eef_pos = np.concatenate((leap0_eef_pos), axis=-1)
+                robot0_eef_quat = np.concatenate((leap0_eef_quat), axis=-1)
+                robot0_eef_hand = np.concatenate((robot0_eef_hand), axis=-1)
 
                 actions_pos = np.concatenate((robot0_eef_pos[action_gap:], robot0_eef_pos[-1:].repeat(action_gap, axis=0)), axis=0)
                 actions_rot = np.concatenate((robot0_eef_quat[action_gap:], robot0_eef_quat[-1:].repeat(action_gap, axis=0)), axis=0)
                 actions_hand = np.concatenate((robot0_eef_hand[action_gap:], robot0_eef_hand[-1:].repeat(action_gap, axis=0)), axis=0)
-
-                
-
                 actions = np.concatenate((actions_pos, actions_rot, actions_hand), axis=-1) # merge arm and hand actions
 
                 for j in range(action_gap): # Based on the action_gap, generate the trajectories

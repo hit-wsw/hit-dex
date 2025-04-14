@@ -113,6 +113,14 @@ class LeapPybulletIK():
 
         return new_points, new_points_left
 
+    def get_mesh_pointcloud_single(self, joint_pos):
+        self.Leap_urdf.update_cfg(joint_pos)
+        right_mesh = self._update_meshes("right_leap")  # Get the new updated mesh
+        robot_pc = right_mesh.sample_points_uniformly(number_of_points=80000)
+        # Convert the sampled mesh point cloud to the format expected by Open3D
+        new_points = np.asarray(robot_pc.points)  # Convert to numpy array for points
+        return new_points
+
     def switch_vector_from_rokoko(self, vector):
         return [vector[0], -vector[2], vector[1]]
 
@@ -531,3 +539,89 @@ class LeapPybulletIK():
         real_left_robot_hand_q[13] = np.pi * 2 - real_left_robot_hand_q[13]
 
         return real_right_robot_hand_q, real_left_robot_hand_q, right_hand_pointcloud, left_hand_pointcloud
+    
+    def compute_IK_single(self, right_hand_pos, right_hand_wrist_ori):
+        p.stepSimulation()
+
+
+
+        # get right hand position information including fingers
+        rightHand_pos = right_hand_pos[0]
+        rightHandThumb_pos = (right_hand_pos[4] - rightHand_pos)
+        rightHandIndex_pos = (right_hand_pos[8] - rightHand_pos)
+        rightHandMiddle_pos = (right_hand_pos[12] - rightHand_pos)
+        rightHandRing_pos = (right_hand_pos[16] - rightHand_pos)
+
+        # transform right hand orientation
+        rightHand_rot = right_hand_wrist_ori
+        rightHand_rot = self.post_process_rokoko_ori(rightHand_rot)
+        euler_angles = quat2euler(np.array([rightHand_rot[3], rightHand_rot[0], rightHand_rot[1], rightHand_rot[2]]))
+        quat_angles = euler2quat(-euler_angles[0], -euler_angles[1], euler_angles[2]).tolist()
+        rightHand_rot = np.array(quat_angles[1:] + quat_angles[:1])
+        rightHand_rot = rotate_quaternion_xyzw(rightHand_rot, np.array([1.0, 0.0, 0.0]), np.pi / 2.0)
+
+        rightHandThumb_pos, rightHandIndex_pos, rightHandMiddle_pos, rightHandRing_pos = self.post_process_rokoko_pos(rightHandThumb_pos, rightHandIndex_pos, rightHandMiddle_pos, rightHandRing_pos)
+        rightHandThumb_pos, rightHandIndex_pos, rightHandMiddle_pos, rightHandRing_pos = self.update_target_vis(rightHand_rot, rightHandThumb_pos, rightHandIndex_pos, rightHandMiddle_pos, rightHandRing_pos)
+
+        leapEndEffectorPos = [
+            rightHandIndex_pos,
+            rightHandMiddle_pos,
+            rightHandRing_pos,
+            rightHandThumb_pos
+        ]
+
+        jointPoses = []#right
+        for i in range(4):
+            jointPoses = jointPoses + list(
+                p.calculateInverseKinematics(self.LeapId, self.leapEndEffectorIndex[i], leapEndEffectorPos[i],
+                                      lowerLimits=self.hand_lower_limits, upperLimits=self.hand_upper_limits, jointRanges=self.hand_joint_ranges,
+                                      restPoses=self.HAND_Q.tolist(), maxNumIterations=1000, residualThreshold=0.001))[4 * i:4 * (i + 1)]
+        jointPoses = tuple(jointPoses)
+
+        combined_jointPoses = (jointPoses[0:4] + (0.0,) + jointPoses[4:8] + (0.0,) + jointPoses[8:12] + (0.0,) + jointPoses[12:16] + (0.0,))
+        combined_jointPoses = list(combined_jointPoses)
+
+        # update the hand joints
+        for i in range(20):
+            p.setJointMotorControl2(
+                bodyIndex=self.LeapId,
+                jointIndex=i,
+                controlMode=p.POSITION_CONTROL,
+                targetPosition=combined_jointPoses[i],
+                targetVelocity=0,
+                force=500,
+                positionGain=0.3,
+                velocityGain=1,
+            )
+
+
+        p.resetBasePositionAndOrientation(
+            self.LeapId,
+            rotate_vector_by_quaternion_using_matrix(self.leap_center_offset, rightHand_rot),
+            rightHand_rot,
+        )
+
+        self.rest_target_vis()
+
+        # map results to real robot
+        real_right_robot_hand_q = np.array([0.0 for _ in range(16)])
+
+        real_right_robot_hand_q[0:4] = jointPoses[0:4]
+        real_right_robot_hand_q[4:8] = jointPoses[4:8]
+        real_right_robot_hand_q[8:12] = jointPoses[8:12]
+        real_right_robot_hand_q[12:16] = jointPoses[12:16]
+        real_right_robot_hand_q[0:2] = real_right_robot_hand_q[0:2][::-1]
+        real_right_robot_hand_q[4:6] = real_right_robot_hand_q[4:6][::-1]
+        real_right_robot_hand_q[8:10] = real_right_robot_hand_q[8:10][::-1]
+
+        real_right_robot_hand_q -= np.pi
+
+        # generate pointcloud of the left and right hand with forward kinematics
+        right_hand_pointcloud= self.get_mesh_pointcloud_single(real_right_robot_hand_q)
+
+        # further map joints to real robot
+        real_right_robot_hand_q += np.pi
+
+
+        return real_right_robot_hand_q, right_hand_pointcloud
+    
