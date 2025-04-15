@@ -1,126 +1,57 @@
-import socket
-import json
-import redis
+import open3d as o3d
 import numpy as np
 
-# Initialize Redis connection
-redis_host = "localhost"
-redis_port = 6669
-redis_password = ""  # If your Redis server has no password, keep it as an empty string.
-r = redis.StrictRedis(
-    host=redis_host, port=redis_port, password=redis_password, decode_responses=True
-)
+num_points_to_sample = 10000
+d435i_depth_intrinsic = o3d.camera.PinholeCameraIntrinsic(
+    1280, 720,
+    923.995567,
+    923.492024,
+    620.892371,
+    384.178306)
 
-# 定义左右手关节名称 拇指、食指、中指、无名指、小指。 每个手指的关节名称都按从近到远（Proximal -> Medial -> Distal -> Tip）的顺序排列。
-left_hand_joint_names = ["LeftHand",
-                         'LeftFinger1Metacarpal', 'LeftFinger1Proximal', 'LeftFinger1Distal', 'LeftFinger1Tip',
-                         'LeftFinger2Proximal', 'LeftFinger2Medial', 'LeftFinger2Distal', 'LeftFinger2Tip',
-                         'LeftFinger3Proximal', 'LeftFinger3Medial', 'LeftFinger3Distal', 'LeftFinger3Tip',
-                         'LeftFinger4Proximal', 'LeftFinger4Medial', 'LeftFinger4Distal', 'LeftFinger4Tip',
-                         'LeftFinger5Proximal', 'LeftFinger5Medial', 'LeftFinger5Distal', 'LeftFinger5Tip']
+head_pose = np.eye(4)
+head_pose[:3, :3] = np.array([[1.0, 0.0, 0.0],
+                                [0.0, 1.0, 0.0],
+                                [0.0, 0.0, 1.0]])
+head_pose[:3, 3] = np.array([0.0, 0.0, 0.0])
 
-right_hand_joint_names = ["RightHand",
-                         'RightFinger1Metacarpal', 'RightFinger1Proximal', 'RightFinger1Distal', 'RightFinger1Tip',
-                         'RightFinger2Proximal', 'RightFinger2Medial', 'RightFinger2Distal', 'RightFinger2Tip',
-                         'RightFinger3Proximal', 'RightFinger3Medial', 'RightFinger3Distal', 'RightFinger3Tip',
-                         'RightFinger4Proximal', 'RightFinger4Medial', 'RightFinger4Distal', 'RightFinger4Tip',
-                         'RightFinger5Proximal', 'RightFinger5Medial', 'RightFinger5Distal', 'RightFinger5Tip']
+# process pointcloud
+color_image_o3d = o3d.io.read_image(color_jpg_path)
+depth_image_o3d = o3d.io.read_image(depth_png_path)
+max_depth = 1
+depth_array = np.asarray(depth_image_o3d)
+mask = depth_array > max_depth
+depth_array[mask] = 0
+filtered_depth_image = o3d.geometry.Image(depth_array)
+rgbd = o3d.geometry.RGBDImage.create_from_color_and_depth(color_image_o3d, filtered_depth_image, depth_trunc=4.0, convert_rgb_to_intensity=False)
+pcd = o3d.geometry.PointCloud.create_from_rgbd_image(rgbd, d435i_depth_intrinsic)
+pcd.transform(head_pose)
+color_pcd = np.concatenate((np.array(pcd.points), np.array(pcd.colors)), axis=-1)
 
-def normalize_wrt_middle_proximal(hand_positions, is_left=True):#根据手中指最近的关节位置，将手部关节位置归一化
-    #根据输入判断要处理左手还是右手
-    middle_proximal_idx = left_hand_joint_names.index('leftMiddleProximal')
-    if not is_left:
-        middle_proximal_idx = right_hand_joint_names.index('rightMiddleProximal')
+# down sample input pointcloud
+if len(color_pcd) > num_points_to_sample:
+    indices = np.random.choice(len(color_pcd), num_points_to_sample, replace=False)
+    color_pcd = color_pcd[indices]
 
-    #获得手腕位置
-    wrist_position = hand_positions[0]
-    middle_proximal_position = hand_positions[middle_proximal_idx]
-    bone_length = np.linalg.norm(wrist_position - middle_proximal_position)
-    normalized_hand_positions = (middle_proximal_position - hand_positions) / bone_length
-    return normalized_hand_positions
+    
 
+pointcloud = self.pointcloud_data[(self.current_index-self.obs_horizon):self.current_index]
+waist = self.waist_data[(self.current_index-self.obs_horizon):self.current_index]
+robot_arm = self.robot_arm_data[(self.current_index-self.obs_horizon):self.current_index]
+robot_hand = self.robot_hand_data[(self.current_index-self.obs_horizon):self.current_index]
 
-def start_server(port):
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # Using SOCK_DGRAM for UDP
-    s.bind(("192.168.199.221", port))
-    print(f"Server started, listening on port {port} for UDP packets...")
+# postprocess data frames
+#agentview_image = ObsUtils.batch_image_hwc_to_chw(agentview_image) / 255.0
+#agentview_image = TensorUtils.to_device(torch.FloatTensor(agentview_image), self.device)
 
-    while True:
-        data, address = s.recvfrom(64800)  # Receive UDP packets
-        #print(data)
-        decoded_data = data.decode()
-        
+pointcloud = TensorUtils.to_device(torch.FloatTensor(pointcloud), self.device)
+waist = TensorUtils.to_device(torch.FloatTensor(waist), self.device)
+robot_arm = TensorUtils.to_device(torch.FloatTensor(robot_arm), self.device)
+robot_hand = TensorUtils.to_device(torch.FloatTensor(robot_hand), self.device)
 
-        # Attempt to parse JSON
-        try:
-            received_json = json.loads(decoded_data)
-
-            #print(received_json)
-
-            #print(received_json["scene"]["newtons"][0]["joints"])
-
-            # Initialize arrays to store the positions
-            left_hand_positions = np.zeros((21, 3))
-            right_hand_positions = np.zeros((21, 3))
-
-            left_hand_orientations = np.zeros((21, 4))
-            right_hand_orientations = np.zeros((21, 4))
-
-            # Iterate through the JSON data to extract hand joint positions
-            for joint_name in left_hand_joint_names:
-                for joint in received_json["scene"]["newtons"][0]["joints"]:
-                    if joint_name in joint['name']:
-                        joint_position = np.array(list(joint["position"].values()))
-                        joint_rotation = np.array(list(joint["rotation"].values()))
-                        left_hand_positions[left_hand_joint_names.index(joint_name)] = joint_position
-                        left_hand_orientations[left_hand_joint_names.index(joint_name)] = joint_rotation
-
-            for joint_name in right_hand_joint_names:
-                for joint in received_json["scene"]["newtons"][0]["joints"]:
-                    if joint_name in joint['name']:
-                        joint_position = np.array(list(joint["position"].values()))
-                        joint_rotation = np.array(list(joint["rotation"].values()))
-                        right_hand_positions[right_hand_joint_names.index(joint_name)] = joint_position
-                        right_hand_orientations[right_hand_joint_names.index(joint_name)] = joint_rotation
-
-
-            # relative distance to middle proximal joint
-            # normalize by bone distance (distance from wrist to middle proximal)
-            # Define the indices of 'middleProximal' in your joint names
-            left_middle_proximal_idx = left_hand_joint_names.index('LeftFinger3Proximal')
-            right_middle_proximal_idx = right_hand_joint_names.index('RightFinger3Proximal')
-
-            # Calculate bone length from 'wrist' to 'middleProximal' for both hands
-            left_wrist_position = left_hand_positions[0]
-            right_wrist_position = right_hand_positions[0]
-
-            left_middle_proximal_position = left_hand_positions[left_middle_proximal_idx]
-            right_middle_proximal_position = right_hand_positions[right_middle_proximal_idx]
-
-            left_bone_length = np.linalg.norm(left_wrist_position - left_middle_proximal_position)
-            right_bone_length = np.linalg.norm(right_wrist_position - right_middle_proximal_position)
-
-            # Calculate relative positions and normalize
-            normalized_left_hand_positions = (left_middle_proximal_position - left_hand_positions) / left_bone_length
-            normalized_right_hand_positions = (right_middle_proximal_position - right_hand_positions) / right_bone_length
-
-            r.set("leftHandJointXyz", np.array(normalized_left_hand_positions).astype(np.float64).tobytes())
-            r.set("rightHandJointXyz", np.array(normalized_right_hand_positions).astype(np.float64).tobytes())
-            r.set("rawLeftHandJointXyz", np.array(left_hand_positions).astype(np.float64).tobytes())
-            r.set("rawRightHandJointXyz", np.array(right_hand_positions).astype(np.float64).tobytes())
-            r.set("rawLeftHandJointOrientation", np.array(left_hand_orientations).astype(np.float64).tobytes())
-            r.set("rawRightHandJointOrientation", np.array(right_hand_orientations).astype(np.float64).tobytes())
-
-
-            print("\n\n")
-            print("=" * 50)
-            print(np.round(left_hand_positions, 3))
-            print("-"*50)
-            print(np.round(right_hand_positions, 3))
-
-        except json.JSONDecodeError:
-            print("Invalid JSON received:")
-
-
-if __name__ == "__main__":
-    start_server(14043)
+return_state = {
+    'pointcloud': pointcloud,
+    'waist': waist,
+    'robot_arm': robot_arm,
+    'robot_hand': robot_hand,
+}
