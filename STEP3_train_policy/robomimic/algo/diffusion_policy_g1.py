@@ -340,6 +340,7 @@ class DiffusionPolicyUNetDex_g1(PolicyAlgo):
         # n_repeats = max(To - len(self.obs_queue), 1)
         # self.obs_queue.extend([obs_dict] * n_repeats)
 
+
         if len(self.action_queue) == 0:
             # no actions left, run inference
             # turn obs_queue into dict of tensors (concat at T dim)
@@ -352,12 +353,13 @@ class DiffusionPolicyUNetDex_g1(PolicyAlgo):
             action_sequence = self._get_action_trajectory(obs_dict=obs_dict)
 
             # put actions into the queue
-            self.action_queue.extend(action_sequence[0][3:13])
+            self.action_queue.extend(action_sequence[0])
+            #self.action_queue.extend(action_sequence[0])
 
         # has action, execute from left to right
         # [Da]
         action = self.action_queue.popleft()
-
+        #action = self.action_queue
         # [1,Da]
         action = action.unsqueeze(0)
         return action

@@ -586,7 +586,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--config",
         type=str,
-        default='STEP3_train_policy/robomimic/training_config/diffusion_policy_pcd_g1.json',
+        default='STEP3_train_policy/robomimic/training_config/diffusion_policy_pcd_wiping_1-14.json',
         #default='STEP3_train_policy/robomimic/training_config/diffusion_policy_pcd_wiping_1-14.json',
         help="(optional) path to a config json that will be used to override the default settings. \
             If omitted, default settings are used. This is the preferred way to run experiments.",
@@ -617,7 +617,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--dataset",
         type=str,
-        default='/media/wsw/SSD1T1/data/g1_1actiongap_10000points.hdf5',
+        default='/media/wsw/SSD1T1/data/111hand_wiping_1-14_5actiongap_10000points.hdf5',
         #default='/media/wsw/SSD1T1/data/111hand_wiping_1-14_5actiongap_10000points.hdf5',
         help="(optional) if provided, override the dataset path defined in the config",
     )

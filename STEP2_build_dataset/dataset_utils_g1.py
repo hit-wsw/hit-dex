@@ -136,8 +136,6 @@ def process_hdf5(output_hdf5_file, metadata_root, action_gap, num_points_to_samp
                 actions_robot_arm = np.concatenate((robot_arm[action_gap:], robot_arm[-1:].repeat(action_gap, axis=0)), axis=0)
                 actions_robot_hand = np.concatenate((robot_hand[action_gap:], robot_hand[-1:].repeat(action_gap, axis=0)), axis=0)
 
-                
-
                 actions = np.concatenate((actions_waist, actions_robot_arm, actions_robot_hand), axis=-1) # merge arm and hand actions
 
                 for j in range(action_gap): # Based on the action_gap, generate the trajectories

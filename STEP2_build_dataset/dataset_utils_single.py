@@ -227,14 +227,15 @@ def process_hdf5(output_hdf5_file, dataset_folders, action_gap, num_points_to_sa
                 leap0_eef_pos = poses[:, 23:26]
                 leap0_eef_quat = poses[:, 26:30]
 
-                robot0_eef_pos = np.concatenate((leap0_eef_pos), axis=-1)
-                robot0_eef_quat = np.concatenate((leap0_eef_quat), axis=-1)
-                robot0_eef_hand = np.concatenate((robot0_eef_hand), axis=-1)
+                robot0_eef_pos = leap0_eef_pos
+                robot0_eef_quat = leap0_eef_quat
+                robot0_eef_hand = robot0_eef_hand
 
                 actions_pos = np.concatenate((robot0_eef_pos[action_gap:], robot0_eef_pos[-1:].repeat(action_gap, axis=0)), axis=0)
                 actions_rot = np.concatenate((robot0_eef_quat[action_gap:], robot0_eef_quat[-1:].repeat(action_gap, axis=0)), axis=0)
                 actions_hand = np.concatenate((robot0_eef_hand[action_gap:], robot0_eef_hand[-1:].repeat(action_gap, axis=0)), axis=0)
                 actions = np.concatenate((actions_pos, actions_rot, actions_hand), axis=-1) # merge arm and hand actions
+                print(actions)
 
                 for j in range(action_gap): # Based on the action_gap, generate the trajectories
                     demo_name = f'demo_{demo_index}'

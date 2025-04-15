@@ -348,7 +348,7 @@ class DiffusionPolicyUNetDex(PolicyAlgo):
             action_sequence = self._get_action_trajectory(obs_dict=obs_dict)
 
             # put actions into the queue
-            self.action_queue.extend(action_sequence[0][3:13])
+            self.action_queue.extend(action_sequence[0])
 
         # has action, execute from left to right
         # [Da]

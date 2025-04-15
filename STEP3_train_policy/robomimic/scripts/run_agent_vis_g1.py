@@ -195,7 +195,6 @@ def run_trained_agent(args):
         np.random.seed(args.seed)
         torch.manual_seed(args.seed)
 
-    idx = 0
     action_list = []
     state_ac_list = []
     while True:
@@ -244,7 +243,6 @@ def run_trained_agent(args):
             env.reset()
             policy.start_episode()
             print('demo done')
-            idx = 0
             action_list = []
             state_ac_list = []
 
