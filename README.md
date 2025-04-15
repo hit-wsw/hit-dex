@@ -82,11 +82,14 @@ python calculate_offset_vis_calib.py --directory save_data_scenario_1
 ```
 第一行代码用于将手套数据与图片中的手套进行对齐、校准；第二行代码用于生成校准后的变换矩阵
 
-之后再执行
+之后再执行replay_human_traj_vis用于可视化采集到的数据。
 ```bash
 python replay_human_traj_vis.py --directory save_data_scenario_1
 ```
-用于可视化采集到的数据。
+最后运行来标记任务开始和结束的时间点。
+```bash
+python demo_clipping_3d.py --directory save_data_scenario_1
+```
 ### 转移到机器人视角
 这一步主要用于处理非实验室数据，在Step2数据集构建的dataset_utils.py第155行可以看出，如果在实验室专门的场景采集数
 据就不需要再进行此步。
