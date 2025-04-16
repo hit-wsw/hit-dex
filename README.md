@@ -1,6 +1,14 @@
 # 本仓库用于HIT-DEX交流使用
 
 # 修改日志
+## 2025.04.15
+新增对单手采集数据的支持，代码运行顺序如下：
+```bash
+python redis_glove_server_sing.py
+```
+```bash
+python data_recording_sing.py -v -s --store_hand -o ./save_data_scenario_1 
+```
 ## 2025.04.11
 1. 新增了对unitree g1机器人采集的数据（lerobot环境下）进行处理、生成hdf5文件的代码：
    ```bash
@@ -43,8 +51,6 @@ python run_trained_agent_in_mujoco.py
 修改了采集手套数据中的字典命名问题，使其能正常与电脑进行通信，并修改传输的关节名称
 
 修改了相机采集时出现的序列号与调动问题，寻找合适的realsense固件以同时启动L515、T265。
-
-
 
 
 # 使用流程：
