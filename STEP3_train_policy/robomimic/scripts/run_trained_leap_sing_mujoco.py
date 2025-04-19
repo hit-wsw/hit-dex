@@ -82,8 +82,7 @@ class VisOnlyEnv:
                 robot0_eef_pos = self.robot0_eef_pos_data[(self.current_index-self.obs_horizon):self.current_index]
                 robot0_eef_quat = self.robot0_eef_quat_data[(self.current_index-self.obs_horizon):self.current_index]
                 robot0_eef_hand = self.robot0_eef_hand_data[(self.current_index-self.obs_horizon):self.current_index]
-
-
+                
                 # postprocess data frames
                 #agentview_image = ObsUtils.batch_image_hwc_to_chw(agentview_image) / 255.0
                 #agentview_image = TensorUtils.to_device(torch.FloatTensor(agentview_image), self.device)
@@ -290,50 +289,21 @@ def run_trained_agent(args):
         cur = time.time()
         action = policy(ob = state)
         times = time.time()-cur
-        print('time:[%f]'%times)
+        #print('time:[%f]'%times)
 
-        #print("++++++++++++++++++++++++POSE RIGHT+++++++++++++++++++++++")
+
         pose_right = action[0:3]
-        #print(action[0:3])
-        #print("++++++++++++++++++++++++POSE LEFT+++++++++++++++++++++++")
-        pose_left = action[3:6]
-        #print(action[3:6])
-        #print("++++++++++++++++++++++++QUAT RIGHT+++++++++++++++++++++++")
-        quat_right = action[6:10]
-        #print(action[6:10])
-        #print("++++++++++++++++++++++++QUAT LEFT+++++++++++++++++++++++")
-        quat_left = action[10:14]
-        #print(action[10:14])
-        #print("++++++++++++++++++++++++HAND RIGHT+++++++++++++++++++++++")
-        hand_right = action[14:30]
-        #print(action[14:30])
-        #print("++++++++++++++++++++++++HAND LEFT+++++++++++++++++++++++")
-        hand_left = action[30:]
-        #print(action[30:])
-        '''print("++++++++++++++++++++++++HAND RIGHT+++++++++++++++++++++++")
-        print((state['robot0_eef_hand'][-1][:16].cpu().numpy() - hand_right).max())
+        quat_right = action[3:7]
+        hand_right = action[7:]
 
-        print("++++++++++++++++++++++++HAND RIGHT+++++++++++++++++++++++")
-        print((state['robot0_eef_pos'][-1][:3].cpu().numpy() - pose_right).max())
-
-        print("++++++++++++++++++++++++HAND RIGHT+++++++++++++++++++++++")
-        print((state['robot0_eef_quat'][-1][:4].cpu().numpy() - quat_right).max())
-
-        print("++++++++++++++++++++++++HAND LEFT+++++++++++++++++++++++")
-        print((state['robot0_eef_hand'][-1][16:].cpu().numpy() - hand_left).max())
-
-        print("++++++++++++++++++++++++HAND LEFT+++++++++++++++++++++++")
-        print((state['robot0_eef_pos'][-1][3:].cpu().numpy() - pose_left).max())
-
-        print("++++++++++++++++++++++++HAND LEFT+++++++++++++++++++++++")
-        print((state['robot0_eef_quat'][-1][4:].cpu().numpy() - quat_left).max())
-        print("\n")
-        print("\n")
-        print("\n")'''
+        hand_right1 = state['robot0_eef_hand'][-1][:16].cpu().numpy()
 
         #env_mu.set_R_base_body(body_name='leap_base',R=quat2mat(quat_right))
         #env_mu.set_p_body(body_name='leap_base',p=pose_right)
+        hand_right = (np.array(hand_right) + np.pi/2).tolist()
+        hand_right1 = (np.array(hand_right1) + np.pi/2).tolist()
         env_mu.forward(q=hand_right,joint_idxs=idxs_fwd)
+        
         
         if env_mu.loop_every(tick_every=1):
             env_mu.plot_T()
@@ -357,7 +327,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--agent",
         type=str,
-        default = '/media/wsw/SSD1T1/data/1-20_model/model_epoch_3000.pth',
+        default = '/media/wsw/SSD1T1/data/model_epoch_700.pth',
         help="path to saved checkpoint pth file",
     )
 
@@ -365,7 +335,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--dataset_path",
         type=str,
-        default='/media/wsw/SSD1T1/data/hand_packaging_wild_1-20_5ag_10000points.hdf5',
+        default='/media/wsw/SSD1T1/data/grasp_ball_5actiongap_20000points.hdf5',
         help="(optional) if provided, an hdf5 file will be written at this path with the rollout data",
     )
 

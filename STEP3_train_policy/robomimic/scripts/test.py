@@ -127,19 +127,13 @@ class VisOnlyEnv:
             
 
     def show_pcd(self):
-        i = 15
+        i = 28
         color_pcd = self.pointcloud_data[i]
         pos_right = self.robot0_eef_pos_data[i][:3]
         ori_right = self.robot0_eef_quat_data[i][:4]
         hand_ori = quat2mat(ori_right)
         
 
-        pos_left = self.robot0_eef_pos_data[i][3:]
-        ori_left = self.robot0_eef_quat_data[i][4:]
-        hand_ori1 = quat2mat(ori_left)
-        
-
-        
         
         # 计算右手的位姿
         '''pose_right = np.eye(4)
@@ -185,7 +179,6 @@ class VisOnlyEnv:
         # 绘制点云
         ax.scatter(points[:, 0], points[:, 1], points[:, 2], c=colors, marker='o', s=1)
         ax.scatter(pos_right[0], pos_right[1], pos_right[2], c='blue', label='Right End-Effector')
-        ax.scatter(pos_left[0], pos_left[1], pos_left[2], c='red', label='Left End-Effector')
         ax.scatter(0, 0, 0)
 
         # 绘制右手坐标系
@@ -200,16 +193,6 @@ class VisOnlyEnv:
                 hand_ori[0, 2], hand_ori[1, 2], hand_ori[2, 2], 
                 color='b', length=axis_length, normalize=True, label='Right Z')
 
-        # 绘制左手坐标系
-        ax.quiver(pos_left[0], pos_left[1], pos_left[2], 
-                hand_ori1[0, 0], hand_ori1[1, 0], hand_ori1[2, 0], 
-                color='r', length=axis_length, normalize=True, label='Left X')
-        ax.quiver(pos_left[0], pos_left[1], pos_left[2], 
-                hand_ori1[0, 1], hand_ori1[1, 1], hand_ori1[2, 1], 
-                color='g', length=axis_length, normalize=True, label='Left Y')
-        ax.quiver(pos_left[0], pos_left[1], pos_left[2], 
-                hand_ori1[0, 2], hand_ori1[1, 2], hand_ori1[2, 2], 
-                color='b', length=axis_length, normalize=True, label='Left Z')
 
         # 设置坐标轴标签
         ax.set_xlabel('X')
@@ -247,7 +230,6 @@ class VisOnlyEnv:
 
         # 初始化空的末端执行器位置
         right_eef, = ax.plot([], [], [], 'bo', label='Right End-Effector')
-        left_eef, = ax.plot([], [], [], 'ro', label='Left End-Effector')
 
         # 设置坐标轴标签
         ax.set_xlabel('X')
@@ -269,21 +251,17 @@ class VisOnlyEnv:
         def update(frame):
             # 获取当前帧的数据
             pos_right = self.robot0_eef_pos_data[frame][:3]
-            pos_left = self.robot0_eef_pos_data[frame][3:]
 
             # 更新末端执行器位置
             right_eef.set_data(pos_right[0], pos_right[1])  # 更新 X 和 Y
             right_eef.set_3d_properties(pos_right[2])      # 更新 Z
-            left_eef.set_data(pos_left[0], pos_left[1])    # 更新 X 和 Y
-            left_eef.set_3d_properties(pos_left[2])        # 更新 Z
-
             # 更新标题
             ax.set_title(f'End-Effector Position Visualization - Frame {frame}')
 
-            return right_eef, left_eef
+            return right_eef
 
         # 创建动画
-        ani = FuncAnimation(fig, update, frames=range(100), interval=100, blit=True)
+        #ani = FuncAnimation(fig, update, frames=range(100), interval=100, blit=True)
 
         # 显示图形
         plt.show()
@@ -459,7 +437,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--dataset_path",
         type=str,
-        default='/media/wsw/SSD1T1/data/hand_packaging_wild_1-20_5ag_10000points.hdf5',
+        default='/media/wsw/SSD1T1/data/grasp_ball_5actiongap_20000points.hdf5',
         help="(optional) if provided, an hdf5 file will be written at this path with the rollout data",
     )
 
